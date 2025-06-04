@@ -1,0 +1,23 @@
+{
+  "name": "irl-clips",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Twitch Clip Player",
+  "main": "src/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  },
+  "keywords": [
+    "twitch",
+    "clips",
+    "streaming",
+    "video"
+  ],
+  "author": "Thomas Lekanger",
+  "license": "MIT"
+}

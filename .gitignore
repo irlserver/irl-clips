@@ -89,7 +89,10 @@ out
 
 # Nuxt.js build / generate output
 .nuxt
+
+# Vite build output
 dist
+dist-ssr
 
 # Gatsby files
 .cache/
