@@ -14,9 +14,10 @@ export class PlaylistManager {
    * Load clips for a channel and create playlist
    * @param {string} channelName - Twitch channel name
    * @param {number} days - Number of days to filter clips
+   * @param {number} minViews - Minimum view count filter
    * @returns {Promise<void>}
    */
-  async loadPlaylist(channelName, days = 900) {
+  async loadPlaylist(channelName, days = 900, minViews = 0) {
     try {
       let clips = await fetchChannelClips(channelName, 100);
 
@@ -30,6 +31,21 @@ export class PlaylistManager {
       if (clips.length === 0) {
         throw new Error(
           `No clips found in the last ${days} days for channel: ${channelName}`
+        );
+      }
+
+      // Filter clips by minimum view count
+      if (minViews > 0) {
+        clips = clips.filter((clip) => clip.viewCount >= minViews);
+
+        if (clips.length === 0) {
+          throw new Error(
+            `No clips found with at least ${minViews} views for channel: ${channelName}`
+          );
+        }
+
+        console.log(
+          `Filtered to ${clips.length} clips with at least ${minViews} views`
         );
       }
 

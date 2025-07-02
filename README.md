@@ -46,6 +46,7 @@ Configure the player using URL parameters:
 |-----------|------|---------|-------------|
 | `channelName` | string | *required* | Twitch channel name |
 | `days` | number | `900` | Filter clips from last N days |
+| `views` | number | `0` | Minimum view count filter (0 = no filter) |
 | `volume` | number | `0.5` | Video volume (0.0 - 1.0) |
 | `showLogo` | boolean | `true` | Show channel logo |
 | `showInfo` | boolean | `true` | Show clip information |
@@ -59,6 +60,12 @@ Configure the player using URL parameters:
 
 # Custom configuration
 ?channelName=xqc&days=7&volume=0.8&showInfo=false
+
+# Filter by minimum view count
+?channelName=shroud&views=1000&days=30
+
+# Combined filters
+?channelName=pokimane&days=7&views=500&volume=0.8
 
 # Mobile-friendly setup
 ?channelName=shroud&showLogo=false&showTimer=false
@@ -92,6 +99,7 @@ Uses Twitch's GraphQL API to:
 - Fetch channel clips
 - Get video playback URLs
 - Access clip metadata
+- Filter clips by view count (client-side)
 
 ## 🎨 Styling
 

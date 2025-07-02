@@ -28,6 +28,7 @@ class ClipPlayerApp {
       return {
         channelName: getQueryParam("channelName"),
         days: getQueryParam("days", 900),
+        views: getQueryParam("views", 0),
         volume: getQueryParam("volume", 0.5),
         showLogo: getQueryParam("showLogo", true),
         showInfo: getQueryParam("showInfo", true),
@@ -67,7 +68,8 @@ class ClipPlayerApp {
       // Load playlist
       await this.playlistManager.loadPlaylist(
         this.config.channelName,
-        this.config.days
+        this.config.days,
+        this.config.views
       );
 
       // Start playing clips
