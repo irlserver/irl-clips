@@ -6,6 +6,7 @@ export class VideoPlayer {
     this.videoElement = videoElement;
     this.volume = options.volume || 0.5;
     this.onClipEnd = options.onClipEnd || (() => {});
+    this.onVideoStart = options.onVideoStart || (() => {});
 
     this.setupEventListeners();
   }
@@ -33,6 +34,11 @@ export class VideoPlayer {
 
     this.videoElement.addEventListener("canplay", () => {
       console.log("Video can start playing");
+    });
+
+    this.videoElement.addEventListener("playing", () => {
+      console.log("Video is now playing");
+      this.onVideoStart();
     });
   }
 

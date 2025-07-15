@@ -99,14 +99,57 @@ class ClipPlayerApp {
       );
 
       // Initialize video player
-      this.videoPlayer = new VideoPlayer();
-      this.videoPlayer.initialize(this.config, this.playlistManager);
+      const videoElement = document.getElementById("clip-player");
+      if (!videoElement) {
+        throw new Error("Video element not found");
+      }
+
+      this.videoPlayer = new VideoPlayer(videoElement, {
+        volume: this.config.volume,
+        onClipEnd: () => this.playNextClip(),
+        onVideoStart: () => this.uiManager.hideLoadingScreen(),
+      });
+
+      // Start playing the first clip
+      await this.playNextClip();
 
       this.isInitialized = true;
       console.log("🚀 Application ready!");
     } catch (error) {
       console.error("❌ Failed to initialize clip player:", error);
       this.handleError(error);
+    }
+  }
+
+  /**
+   * Play the next clip in the playlist
+   */
+  async playNextClip() {
+    try {
+      const clip = this.playlistManager.getNextClip();
+      if (!clip) {
+        console.error("No clips available to play");
+        return;
+      }
+
+      console.log("Playing clip:", clip.title);
+
+      // Update UI with clip info
+      this.uiManager.updateClipInfo(clip);
+
+      // Get playback URL and play the clip
+      const playbackUrl = await this.playlistManager.getClipPlaybackUrl(clip);
+      if (playbackUrl) {
+        await this.videoPlayer.playClip(playbackUrl);
+      } else {
+        console.error("Failed to get playback URL, skipping to next clip");
+        // Try the next clip
+        setTimeout(() => this.playNextClip(), 1000);
+      }
+    } catch (error) {
+      console.error("Error playing clip:", error);
+      // Try the next clip after a delay
+      setTimeout(() => this.playNextClip(), 2000);
     }
   }
 

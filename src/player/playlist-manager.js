@@ -10,6 +10,8 @@ export class PlaylistManager {
     this.currentIndex = 0;
     this.shuffleStrategy = "smart"; // Can be 'random', 'stratified', 'weighted', 'smart'
     this.maxClipsToFetch = 400; // Fetch more clips for better variety
+    this.isLoadingComplete = false;
+    this.backgroundLoadingPromise = null;
   }
 
   /**
@@ -152,7 +154,8 @@ export class PlaylistManager {
    * @returns {Promise<string|null>} Playback URL or null if failed
    */
   async getClipPlaybackUrl(clip) {
-    const clipSlug = clip.url.split("/").pop();
+    // Use slug directly if available, otherwise extract from URL
+    const clipSlug = clip.slug || clip.url.split("/").pop();
     return await getClipPlaybackUrl(clipSlug);
   }
 
