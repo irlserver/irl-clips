@@ -154,13 +154,22 @@ export async function fetchChannelClips(
  * Fetch a diverse set of clips using multiple strategies
  * @param {string} channelName - Twitch channel name
  * @param {number} totalClips - Total number of clips to attempt to fetch
+ * @param {string} startCursor - Starting cursor for pagination (optional)
  * @returns {Promise<Array>} Array of clip objects
  */
-export async function fetchDiverseClips(channelName, totalClips = 300) {
-  console.log(`Fetching diverse set of clips for ${channelName}...`);
+export async function fetchDiverseClips(
+  channelName,
+  totalClips = 300,
+  startCursor = null
+) {
+  console.log(
+    `Fetching diverse set of clips for ${channelName}${
+      startCursor ? " (continuing from cursor)" : ""
+    }...`
+  );
 
   let allClips = [];
-  let cursor = null;
+  let cursor = startCursor;
   let requestCount = 0;
   const maxRequests = Math.ceil(totalClips / 100); // Limit API calls
 

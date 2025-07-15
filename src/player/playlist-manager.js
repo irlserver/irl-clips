@@ -1,5 +1,9 @@
 import { smartShuffle, filterByDateRange } from "../utils/array.js";
-import { fetchDiverseClips, getClipPlaybackUrl } from "../api/twitch.js";
+import {
+  fetchChannelClips,
+  fetchDiverseClips,
+  getClipPlaybackUrl,
+} from "../api/twitch.js";
 
 /**
  * Playlist Manager class for handling clip playlists
@@ -15,7 +19,168 @@ export class PlaylistManager {
   }
 
   /**
-   * Load clips for a channel and create playlist
+   * Load initial clips for immediate playback (fast loading)
+   * @param {string} channelName - Twitch channel name
+   * @param {number} days - Number of days to filter clips
+   * @param {number} minViews - Minimum view count filter
+   * @param {string} shuffleStrategy - Shuffling strategy to use
+   * @returns {Promise<void>}
+   */
+  async loadInitialClips(
+    channelName,
+    days = 900,
+    minViews = 0,
+    shuffleStrategy = "smart"
+  ) {
+    try {
+      this.shuffleStrategy = shuffleStrategy;
+
+      console.log(
+        `🚀 Fast loading first batch of clips for immediate playback...`
+      );
+
+      // Fetch just the first batch (100 clips) for immediate playback
+      const result = await fetchChannelClips(channelName, 100);
+      let clips = result.clips;
+
+      if (clips.length === 0) {
+        throw new Error(`No clips found for channel: ${channelName}`);
+      }
+
+      console.log(`Initial batch: ${clips.length} clips`);
+
+      // Apply filters to initial batch
+      clips = this.applyFilters(clips, days, minViews);
+
+      if (clips.length === 0) {
+        throw new Error(
+          `No clips found matching criteria for channel: ${channelName}`
+        );
+      }
+
+      // Apply initial shuffling
+      this.playlist = smartShuffle(clips, this.shuffleStrategy);
+      this.currentIndex = 0;
+
+      console.log(
+        `✨ Ready to play with ${this.playlist.length} clips! Loading more in background...`
+      );
+
+      // Start background loading of remaining clips
+      this.backgroundLoadingPromise = this.loadRemainingClips(
+        channelName,
+        days,
+        minViews,
+        result.endCursor,
+        result.hasNextPage
+      );
+
+      return;
+    } catch (error) {
+      console.error("Failed to load initial clips:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Load remaining clips in the background
+   * @param {string} channelName - Twitch channel name
+   * @param {number} days - Number of days to filter clips
+   * @param {number} minViews - Minimum view count filter
+   * @param {string} startCursor - Cursor from initial fetch
+   * @param {boolean} hasNextPage - Whether more pages exist
+   * @returns {Promise<void>}
+   */
+  async loadRemainingClips(
+    channelName,
+    days,
+    minViews,
+    startCursor,
+    hasNextPage
+  ) {
+    if (!hasNextPage || !startCursor) {
+      console.log("✅ All clips already loaded");
+      this.isLoadingComplete = true;
+      return;
+    }
+
+    try {
+      console.log("📦 Loading additional clips in background...");
+
+      // Fetch remaining clips with pagination starting from where we left off
+      const remainingClips = await fetchDiverseClips(
+        channelName,
+        this.maxClipsToFetch - this.playlist.length,
+        startCursor
+      );
+
+      if (remainingClips.length === 0) {
+        console.log("✅ No additional clips found");
+        this.isLoadingComplete = true;
+        return;
+      }
+
+      console.log(
+        `Background fetch: ${remainingClips.length} additional clips`
+      );
+
+      // Apply filters to new clips
+      const filteredClips = this.applyFilters(remainingClips, days, minViews);
+
+      if (filteredClips.length > 0) {
+        // Merge new clips into existing playlist (reshuffled)
+        const allClips = [...this.playlist, ...filteredClips];
+        const currentClip = this.playlist[this.currentIndex - 1]; // Remember current position
+
+        // Reshuffle the combined playlist
+        this.playlist = smartShuffle(allClips, this.shuffleStrategy);
+
+        // Try to maintain current position (find the clip we were just playing)
+        if (currentClip) {
+          const currentClipIndex = this.playlist.findIndex(
+            (clip) => clip.id === currentClip.id
+          );
+          if (currentClipIndex >= 0) {
+            this.currentIndex = currentClipIndex + 1;
+          }
+        }
+
+        console.log(
+          `✨ Expanded playlist to ${this.playlist.length} clips total`
+        );
+        this.logPlaylistStats();
+      }
+
+      this.isLoadingComplete = true;
+    } catch (error) {
+      console.error("Background loading failed:", error);
+      this.isLoadingComplete = true;
+    }
+  }
+
+  /**
+   * Apply date and view filters to clips
+   * @param {Array} clips - Array of clip objects
+   * @param {number} days - Number of days to filter
+   * @param {number} minViews - Minimum view count
+   * @returns {Array} Filtered clips
+   */
+  applyFilters(clips, days, minViews) {
+    // Filter clips by date range
+    let filteredClips = filterByDateRange(clips, days);
+
+    // Filter clips by minimum view count
+    if (minViews > 0) {
+      filteredClips = filteredClips.filter(
+        (clip) => clip.viewCount >= minViews
+      );
+    }
+
+    return filteredClips;
+  }
+
+  /**
+   * Load clips for a channel and create playlist (legacy method for backward compatibility)
    * @param {string} channelName - Twitch channel name
    * @param {number} days - Number of days to filter clips
    * @param {number} minViews - Minimum view count filter
@@ -28,60 +193,8 @@ export class PlaylistManager {
     minViews = 0,
     shuffleStrategy = "smart"
   ) {
-    try {
-      this.shuffleStrategy = shuffleStrategy;
-
-      console.log(
-        `Loading playlist with strategy: ${shuffleStrategy}, fetching up to ${this.maxClipsToFetch} clips`
-      );
-
-      // Fetch a diverse set of clips using pagination
-      let clips = await fetchDiverseClips(channelName, this.maxClipsToFetch);
-
-      if (clips.length === 0) {
-        throw new Error(`No clips found for channel: ${channelName}`);
-      }
-
-      console.log(`Initial fetch: ${clips.length} clips`);
-
-      // Filter clips by date range
-      clips = filterByDateRange(clips, days);
-
-      if (clips.length === 0) {
-        throw new Error(
-          `No clips found in the last ${days} days for channel: ${channelName}`
-        );
-      }
-
-      console.log(`After date filtering: ${clips.length} clips`);
-
-      // Filter clips by minimum view count
-      if (minViews > 0) {
-        clips = clips.filter((clip) => clip.viewCount >= minViews);
-
-        if (clips.length === 0) {
-          throw new Error(
-            `No clips found with at least ${minViews} views for channel: ${channelName}`
-          );
-        }
-
-        console.log(
-          `After view filtering: ${clips.length} clips with at least ${minViews} views`
-        );
-      }
-
-      // Apply smart shuffling for better variety
-      this.playlist = smartShuffle(clips, this.shuffleStrategy);
-      this.currentIndex = 0;
-
-      console.log(
-        `✨ Loaded ${this.playlist.length} clips into playlist using ${this.shuffleStrategy} shuffle strategy`
-      );
-      this.logPlaylistStats();
-    } catch (error) {
-      console.error("Failed to load playlist:", error);
-      throw error;
-    }
+    // Use the new optimized loading approach
+    await this.loadInitialClips(channelName, days, minViews, shuffleStrategy);
   }
 
   /**
@@ -181,10 +294,30 @@ export class PlaylistManager {
   }
 
   /**
+   * Check if background loading is complete
+   * @returns {boolean} True if all clips have been loaded
+   */
+  isBackgroundLoadingComplete() {
+    return this.isLoadingComplete;
+  }
+
+  /**
+   * Wait for background loading to complete
+   * @returns {Promise<void>}
+   */
+  async waitForBackgroundLoading() {
+    if (this.backgroundLoadingPromise) {
+      await this.backgroundLoadingPromise;
+    }
+  }
+
+  /**
    * Clear the current playlist
    */
   clear() {
     this.playlist = [];
     this.currentIndex = 0;
+    this.isLoadingComplete = false;
+    this.backgroundLoadingPromise = null;
   }
 }

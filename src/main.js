@@ -92,10 +92,11 @@ class ClipPlayerApp {
       );
 
       console.log(
-        "✅ Loaded",
+        "✅ Ready to play with",
         this.playlistManager.playlist.length,
         "clips for",
-        this.config.channelName
+        this.config.channelName,
+        "(loading more in background)"
       );
 
       // Initialize video player
