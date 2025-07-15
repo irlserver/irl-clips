@@ -295,8 +295,8 @@ video {
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #dc2626;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
 }
 
 .form-group input[type="range"] {
@@ -312,7 +312,7 @@ video {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #667eea;
+  background: #dc2626;
   cursor: pointer;
   border: 2px solid white;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
@@ -322,7 +322,7 @@ video {
   display: inline-block;
   margin-left: 10px;
   font-weight: 600;
-  color: #667eea;
+  color: #dc2626;
   min-width: 40px;
 }
 
@@ -362,8 +362,8 @@ video {
 }
 
 .checkbox-group input[type="checkbox"]:checked + .checkmark {
-  background: #667eea;
-  border-color: #667eea;
+  background: #dc2626;
+  border-color: #dc2626;
 }
 
 .checkbox-group input[type="checkbox"]:checked + .checkmark::after {
@@ -408,9 +408,9 @@ video {
 }
 
 .streamer-btn:hover {
-  background: #667eea;
+  background: #dc2626;
   color: white;
-  border-color: #667eea;
+  border-color: #dc2626;
   transform: translateY(-1px);
 }
 
@@ -497,12 +497,12 @@ video {
 
 .test-btn {
   background: white;
-  color: #667eea;
-  border: 2px solid #667eea;
+  color: #dc2626;
+  border: 2px solid #dc2626;
 }
 
 .test-btn:hover {
-  background: #667eea;
+  background: #dc2626;
   color: white;
   transform: translateY(-1px);
 }
