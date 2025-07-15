@@ -38,10 +38,11 @@ export class URLGenerator {
   createContainer() {
     this.container = document.createElement("div");
     this.container.id = "url-generator";
+    this.container.classList.add("hero-gradient");
     this.container.innerHTML = `
       <div class="generator-content">
         <div class="generator-header">
-          <img src="/public/logo.webp" alt="IRLServer Logo" class="generator-logo">
+          <img src="/logo.webp" alt="IRLServer Logo" class="generator-logo">
           <h1>IRLServer Clip Player Generator</h1>
           <p>Create a custom clip player for your favorite Twitch streamer</p>
           <div class="powered-by">
@@ -184,7 +185,7 @@ export class URLGenerator {
         <div class="generator-footer">
           <div class="footer-content">
             <div class="footer-branding">
-              <img src="/public/logo.webp" alt="IRLServer" class="footer-logo">
+              <img src="/logo.webp" alt="IRLServer" class="footer-logo">
               <div class="footer-text">
                 <h3><a href="https://irlserver.com" target="_blank" rel="noopener">IRLServer.com</a></h3>
                 <p>Everything you need for IRL</p>
