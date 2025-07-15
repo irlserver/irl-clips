@@ -27,7 +27,6 @@ export class URLGenerator {
    */
   initialize() {
     this.createContainer();
-    this.createForm();
     this.setupEventListeners();
     this.updateURLPreview();
   }
