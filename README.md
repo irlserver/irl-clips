@@ -1,41 +1,57 @@
-# 🎬 IRLServer Clip Player
+# 🎬 IRLServer Twitch Clip Player
 
-A modern, responsive Twitch clip viewer that continuously plays clips from your favorite streamers. Built with Vite, ES6 modules, and modern web technologies.
+**Created by [IRLServer.com](https://irlserver.com)** - An advanced web application for playing Twitch clips with intelligent shuffling and filtering capabilities.
+
+---
+
+> **📋 License**: CC BY 4.0 - Just credit [IRLServer.com](https://irlserver.com) if you use this!
+
+---
+
+## 🆕 **URL Generator**
+
+**New Feature!** When you visit the site without a `channelName` parameter, you'll see a beautiful generator interface that lets you:
+
+- 🎯 **Easy Setup**: Point-and-click configuration for all parameters
+- 🌟 **Popular Streamers**: Quick-select buttons for top Twitch streamers
+- 🔄 **Live URL Preview**: See your custom URL update in real-time
+- 📋 **One-Click Copy**: Copy the generated URL to your clipboard
+- 🚀 **Instant Launch**: Test or launch your player immediately
+
+Simply visit the site at `https://clips.irl.ac` (without any parameters) to access the generator!
+
+### 🎯 **Clean Player Experience**
+
+- **🎬 Clip Player**: Clean interface, no branding required
+- **⚙️ Generator Page**: Shows IRLServer.com attribution (as it should!)
+
+That's it - simple and user-friendly!
 
 ## ✨ Features
 
 - 🎥 **Continuous Playback**: Automatically plays clips in sequence
-- 🔀 **Smart Shuffling**: Randomizes clip order for variety
+- 🔀 **Smart Shuffling**: Advanced shuffling algorithms ensure variety across different view count ranges
+- 📊 **Diverse Clip Pool**: Fetches 300+ clips through pagination instead of just the top 100
 - 📱 **Responsive Design**: Works on desktop and mobile devices
 - ⚡ **Fast Loading**: Built with Vite for optimal performance
 - 🎛️ **Configurable**: Customize via URL parameters
 - 🎨 **Modern UI**: Clean, minimal interface with accessibility support
-- 📊 **Smart Filtering**: Filter clips by date range
+- 📊 **Smart Filtering**: Filter clips by date range and minimum view count
 
 ## 🚀 Quick Start
 
-### Development
+### Method 1: URL Generator (Recommended)
 
-```bash
-# Install dependencies
-npm install
+1. Visit the site without any parameters: `https://clips.irl.ac`
+2. Use the interactive generator to configure your clip player
+3. Click "🚀 Launch Player" or copy the generated URL
 
-# Start development server
-npm run dev
+### Method 2: Manual URL Construction
 
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
-```
-
-### Usage
-
-Visit the application with required parameters:
+Visit the site with parameters:
 
 ```
-http://localhost:3000?channelName=shroud&days=30&volume=0.5
+https://clips.irl.ac?channelName=xqc&days=7&views=1000&shuffle=smart
 ```
 
 ## 🔧 Configuration
@@ -47,10 +63,18 @@ Configure the player using URL parameters:
 | `channelName` | string | *required* | Twitch channel name |
 | `days` | number | `900` | Filter clips from last N days |
 | `views` | number | `0` | Minimum view count filter (0 = no filter) |
+| `shuffle` | string | `smart` | Shuffle strategy: `smart`, `stratified`, `weighted`, `random` |
 | `volume` | number | `0.5` | Video volume (0.0 - 1.0) |
 | `showLogo` | boolean | `true` | Show channel logo |
 | `showInfo` | boolean | `true` | Show clip information |
 | `showTimer` | boolean | `true` | Show countdown timer |
+
+### Shuffle Strategies
+
+- **`smart`** *(default)*: Automatically chooses the best strategy based on clip count
+- **`stratified`**: Divides clips into view count ranges and evenly distributes them
+- **`weighted`**: Gives less popular clips a chance while still favoring popular ones  
+- **`random`**: Traditional random shuffle (like the old behavior)
 
 ### Example URLs
 
@@ -64,11 +88,34 @@ Configure the player using URL parameters:
 # Filter by minimum view count
 ?channelName=shroud&views=1000&days=30
 
-# Combined filters
-?channelName=pokimane&days=7&views=500&volume=0.8
+# Use different shuffle strategies
+?channelName=pokimane&shuffle=stratified&days=7
+?channelName=ninja&shuffle=weighted&views=500
+
+# Combined filters with smart shuffling
+?channelName=pokimane&days=7&views=500&shuffle=smart&volume=0.8
+
+# Old-style random shuffle
+?channelName=xqc&shuffle=random&days=14
 
 # Mobile-friendly setup
 ?channelName=shroud&showLogo=false&showTimer=false
+```
+
+## 🛠️ Development
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
 ```
 
 ## 🏗️ Architecture
@@ -89,17 +136,17 @@ src/
 │   └── ui-manager.js    # UI state management
 └── utils/
     ├── url.js           # URL parameter handling
-    └── array.js         # Array utilities
+    └── array.js         # Advanced shuffling algorithms
 ```
 
 ## 🔗 API Integration
 
-Uses Twitch's GraphQL API to:
+Uses Twitch's GraphQL API with advanced features:
 
-- Fetch channel clips
-- Get video playback URLs
-- Access clip metadata
-- Filter clips by view count (client-side)
+- **Pagination Support**: Fetches 300+ clips instead of just the top 100
+- **Diverse Sampling**: Gets clips from different popularity ranges
+- **Smart Caching**: Efficient API usage with respectful rate limiting
+- **Fallback Handling**: Graceful degradation when pagination fails
 
 ## 🎨 Styling
 
@@ -130,32 +177,11 @@ npm run build
 # Deploy the `dist` folder to your hosting provider
 ```
 
-## 🛠️ Development
-
-### Project Structure
-
-- **Modular Architecture**: Clean separation of concerns
-- **ESM Modules**: Native ES6 module system
-- **Vite Build System**: Fast development and optimized builds
-- **Type Annotations**: JSDoc comments for better development experience
-
-### Adding Features
-
-1. Create new modules in appropriate directories
-2. Export functions/classes using ES6 syntax
-3. Import and integrate in `main.js`
-4. Update this README with new configuration options
-
-## 🎯 Performance
-
-- **Bundle Splitting**: Automatic code splitting with Vite
-- **Tree Shaking**: Dead code elimination
-- **Asset Optimization**: Automatic image and CSS optimization
-- **Lazy Loading**: Components loaded as needed
-
 ## 📝 License
 
-MIT License - see [LICENSE](LICENSE) for details.
+**CC BY 4.0** - Use it however you want, just mention [IRLServer.com](https://irlserver.com) somewhere!
+
+Created with ❤️ by [IRLServer.com](https://irlserver.com)
 
 ## 🤝 Contributing
 
@@ -167,12 +193,17 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ## 🎮 Example Streamers
 
-Try these popular channels:
+Try these popular channels with different strategies:
 
-- `?channelName=shroud`
-- `?channelName=pokimane`
-- `?channelName=xqc`
-- `?channelName=ninja`
+```
+# Popular streamers with stratified shuffling
+?channelName=shroud&shuffle=stratified
+?channelName=pokimane&shuffle=weighted&views=1000
+
+# Discover hidden gems with weighted shuffling
+?channelName=xqc&shuffle=weighted&days=30
+?channelName=ninja&shuffle=smart&views=500
+```
 
 ---
 

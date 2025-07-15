@@ -35,17 +35,27 @@ async function makeGraphQLRequest(query) {
 }
 
 /**
- * Fetch clips for a specific channel
+ * Fetch clips for a specific channel with pagination support
  * @param {string} channelName - Twitch channel name
- * @param {number} count - Number of clips to fetch (max 100)
- * @returns {Promise<Array>} Array of clip objects
+ * @param {number} count - Number of clips to fetch (max 100 per request)
+ * @param {string} cursor - Pagination cursor (optional)
+ * @returns {Promise<Object>} Object containing clips array and pagination info
  */
-export async function fetchChannelClips(channelName, count = 100) {
-  console.log(`Fetching ${count} clips for ${channelName}...`);
+export async function fetchChannelClips(
+  channelName,
+  count = 100,
+  cursor = null
+) {
+  console.log(
+    `Fetching ${count} clips for ${channelName}${
+      cursor ? " (paginated)" : ""
+    }...`
+  );
 
+  const cursorParam = cursor ? `, after: "${cursor}"` : "";
   const query = `query { 
     user(login: "${channelName}") { 
-      clips(first: ${Math.min(count, 100)}) { 
+      clips(first: ${Math.min(count, 100)}${cursorParam}) { 
         edges { 
           node { 
             id 
@@ -55,19 +65,77 @@ export async function fetchChannelClips(channelName, count = 100) {
             createdAt 
             viewCount 
           } 
-        } 
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
       } 
     } 
   }`;
 
   const data = await makeGraphQLRequest(query);
-  const clips = data?.data?.user?.clips?.edges.map((edge) => edge.node) || [];
+  const clipsConnection = data?.data?.user?.clips;
+  const clips = clipsConnection?.edges?.map((edge) => edge.node) || [];
+  const pageInfo = clipsConnection?.pageInfo || {
+    hasNextPage: false,
+    endCursor: null,
+  };
 
-  if (clips.length === 0) {
+  if (clips.length === 0 && !cursor) {
     console.warn("No clips found from API!");
   }
 
-  return clips;
+  return {
+    clips,
+    hasNextPage: pageInfo.hasNextPage,
+    endCursor: pageInfo.endCursor,
+  };
+}
+
+/**
+ * Fetch a diverse set of clips using multiple strategies
+ * @param {string} channelName - Twitch channel name
+ * @param {number} totalClips - Total number of clips to attempt to fetch
+ * @returns {Promise<Array>} Array of clip objects
+ */
+export async function fetchDiverseClips(channelName, totalClips = 300) {
+  console.log(`Fetching diverse set of clips for ${channelName}...`);
+
+  let allClips = [];
+  let cursor = null;
+  let requestCount = 0;
+  const maxRequests = Math.ceil(totalClips / 100); // Limit API calls
+
+  try {
+    // Fetch multiple pages to get beyond just the top clips
+    while (allClips.length < totalClips && requestCount < maxRequests) {
+      const result = await fetchChannelClips(channelName, 100, cursor);
+
+      if (result.clips.length === 0) break;
+
+      allClips.push(...result.clips);
+      requestCount++;
+
+      if (!result.hasNextPage || !result.endCursor) break;
+      cursor = result.endCursor;
+
+      // Small delay between requests to be respectful
+      if (requestCount < maxRequests) {
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+    }
+
+    console.log(
+      `Fetched ${allClips.length} clips across ${requestCount} API calls`
+    );
+    return allClips;
+  } catch (error) {
+    console.error("Error fetching diverse clips:", error);
+    // Fallback to original method if pagination fails
+    const fallback = await fetchChannelClips(channelName, 100);
+    return fallback.clips;
+  }
 }
 
 /**

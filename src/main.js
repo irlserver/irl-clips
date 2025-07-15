@@ -1,18 +1,45 @@
 import "./styles/main.css";
-import { getQueryParam, validateRequiredParams } from "./utils/url.js";
+import { getQueryParam } from "./utils/url.js";
 import { VideoPlayer } from "./player/video-player.js";
 import { PlaylistManager } from "./player/playlist-manager.js";
 import { UIManager } from "./ui/ui-manager.js";
+import { URLGenerator } from "./ui/generator.js";
+
+// Display attribution information in console
+// Note: IRLServer.com branding appears prominently in the generator interface
+// but NOT in the actual clip player to keep the viewing experience clean
+console.log(
+  "%c🎬 IRLServer Clip Player",
+  "color: #667eea; font-size: 20px; font-weight: bold;"
+);
+console.log(
+  "%cCreated by IRLServer.com",
+  "color: #764ba2; font-size: 14px; font-weight: bold;"
+);
+console.log(
+  "%c📋 License: CC BY 4.0 - Attribution Required",
+  "color: #fbbf24; font-size: 12px;"
+);
+console.log(
+  "%c🔗 https://irlserver.com",
+  "color: #60a5fa; font-size: 12px; text-decoration: underline;"
+);
+console.log(
+  "%cWhen using this software, you must credit IRLServer.com as the original creator.",
+  "color: #6b7280; font-size: 11px;"
+);
 
 /**
  * Main Application class
  */
 class ClipPlayerApp {
   constructor() {
-    this.config = this.loadConfiguration();
+    this.channelName = getQueryParam("channelName", null);
+    this.config = null;
     this.uiManager = new UIManager();
     this.playlistManager = new PlaylistManager();
     this.videoPlayer = null;
+    this.urlGenerator = null;
     this.isInitialized = false;
   }
 
@@ -21,128 +48,113 @@ class ClipPlayerApp {
    * @returns {Object} Configuration object
    */
   loadConfiguration() {
-    try {
-      // Validate required parameters
-      validateRequiredParams(["channelName"]);
-
-      return {
-        channelName: getQueryParam("channelName"),
-        days: getQueryParam("days", 900),
-        views: getQueryParam("views", 0),
-        volume: getQueryParam("volume", 0.5),
-        showLogo: getQueryParam("showLogo", true),
-        showInfo: getQueryParam("showInfo", true),
-        showTimer: getQueryParam("showTimer", true),
-      };
-    } catch (error) {
-      console.error("Configuration error:", error);
-      throw error;
-    }
+    return {
+      channelName: this.channelName,
+      days: getQueryParam("days", 900),
+      views: getQueryParam("views", 0),
+      shuffle: getQueryParam("shuffle", "smart"),
+      volume: getQueryParam("volume", 0.5),
+      showLogo: getQueryParam("showLogo", true),
+      showInfo: getQueryParam("showInfo", true),
+      showTimer: getQueryParam("showTimer", true),
+    };
   }
 
   /**
    * Initialize the application
    */
   async initialize() {
+    // Check if we have a channel name
+    if (!this.channelName || this.channelName.trim() === "") {
+      console.log("🎬 No channel specified, showing URL generator...");
+      this.showGenerator();
+      return;
+    }
+
+    // We have a channel name, proceed with normal initialization
+    this.config = this.loadConfiguration();
+
     try {
       console.log(
         "🎬 Initializing IRLServer clip player for channel:",
         this.config.channelName
       );
 
-      // Initialize UI
+      // Initialize UI with configuration
       this.uiManager.initialize(this.config);
-      this.uiManager.showLoadingScreen("Loading Clips...");
-
-      // Get video element and setup video player
-      const videoElement = document.getElementById("clip-player");
-      if (!videoElement) {
-        throw new Error("Video element not found");
-      }
-
-      this.videoPlayer = new VideoPlayer(videoElement, {
-        volume: this.config.volume,
-        onClipEnd: () => this.playNextClip(),
-      });
 
       // Load playlist
       await this.playlistManager.loadPlaylist(
         this.config.channelName,
         this.config.days,
-        this.config.views
+        this.config.views,
+        this.config.shuffle
       );
 
-      // Start playing clips
-      await this.playNextClip();
+      console.log(
+        "✅ Loaded",
+        this.playlistManager.playlist.length,
+        "clips for",
+        this.config.channelName
+      );
+
+      // Initialize video player
+      this.videoPlayer = new VideoPlayer();
+      this.videoPlayer.initialize(this.config, this.playlistManager);
 
       this.isInitialized = true;
-      console.log("✅ Application initialized successfully");
+      console.log("🚀 Application ready!");
     } catch (error) {
-      console.error("❌ Failed to initialize application:", error);
-      this.uiManager.showError(`Failed to load clips: ${error.message}`);
-      throw error;
+      console.error("❌ Failed to initialize clip player:", error);
+      this.handleError(error);
     }
   }
 
   /**
-   * Play the next clip in the playlist
+   * Show the URL generator interface
    */
-  async playNextClip() {
-    try {
-      const clip = this.playlistManager.getNextClip();
+  showGenerator() {
+    // Hide all normal player elements
+    this.hidePlayerElements();
 
-      if (!clip) {
-        console.warn("No clips available to play");
-        this.uiManager.showError("No clips available");
-        return;
-      }
-
-      console.log(`🎥 Playing: ${clip.title}`);
-
-      // Get playback URL
-      const playbackUrl = await this.playlistManager.getClipPlaybackUrl(clip);
-
-      if (!playbackUrl) {
-        console.error("Failed to get playback URL, skipping clip");
-        // Try next clip
-        setTimeout(() => this.playNextClip(), 1000);
-        return;
-      }
-
-      // Update UI with clip info
-      if (this.config.showInfo) {
-        this.uiManager.updateClipInfo(clip);
-      }
-
-      // Play the clip
-      await this.videoPlayer.playClip(playbackUrl);
-
-      // Hide loading screen after first successful play
-      this.uiManager.hideLoadingScreen();
-
-      // Log playlist stats
-      const stats = this.playlistManager.getStats();
-      console.log(
-        `📊 Playlist: ${stats.currentIndex}/${stats.totalClips} (${stats.remainingClips} remaining)`
-      );
-    } catch (error) {
-      console.error("Error playing clip:", error);
-      // Try next clip after a delay
-      setTimeout(() => this.playNextClip(), 2000);
-    }
+    // Initialize and show the generator
+    this.urlGenerator = new URLGenerator();
+    this.urlGenerator.initialize();
+    this.urlGenerator.show();
   }
 
   /**
-   * Get current application state
-   * @returns {Object} Application state
+   * Hide player elements when showing generator
    */
-  getState() {
-    return {
-      isInitialized: this.isInitialized,
-      config: this.config,
-      playlistStats: this.playlistManager.getStats(),
-      isPlaying: this.videoPlayer?.isPlaying() || false,
-    };
+  hidePlayerElements() {
+    const elementsToHide = [
+      "#loading-screen",
+      "#clip-player",
+      "#clip-info",
+      "#logo",
+      "#logo-text",
+      "#countdown-timer",
+    ];
+
+    elementsToHide.forEach((selector) => {
+      const element = document.querySelector(selector);
+      if (element) {
+        element.style.display = "none";
+      }
+    });
+  }
+
+  /**
+   * Handle application errors
+   * @param {Error} error - The error that occurred
+   */
+  handleError(error) {
+    const loadingScreen = document.getElementById("loading-screen");
+    if (loadingScreen) {
+      loadingScreen.textContent = `Error: ${error.message}`;
+      loadingScreen.style.color = "#ff4444";
+      loadingScreen.style.display = "flex";
+    }
   }
 }
 

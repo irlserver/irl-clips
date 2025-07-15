@@ -2,8 +2,13 @@
   "name": "irl-clips",
   "version": "1.0.0",
   "type": "module",
-  "description": "Twitch Clip Player",
+  "description": "Advanced Twitch Clip Player with intelligent shuffling - Created by IRLServer.com",
   "main": "src/main.js",
+  "homepage": "https://irlserver.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/irlserver/irl-clips"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -16,8 +21,12 @@
     "twitch",
     "clips",
     "streaming",
-    "video"
+    "video",
+    "irlserver",
+    "shuffle",
+    "player"
   ],
-  "author": "Thomas Lekanger",
-  "license": "MIT"
+  "author": "IRLServer.com - Thomas Lekanger <contact@irlserver.com>",
+  "license": "CC-BY-4.0",
+  "attribution": "When using this software, you must credit IRLServer.com as the original creator and include a visible link to https://irlserver.com"
 }
