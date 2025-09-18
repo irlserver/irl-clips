@@ -55,6 +55,7 @@ class ClipPlayerApp {
       shuffle: getQueryParam("shuffle", "smart"),
       volume: getQueryParam("volume", 0.5),
       showLogo: getQueryParam("showLogo", true),
+      logoFreq: getQueryParam("logoFreq", 5), // Show logo every N clips
       showInfo: getQueryParam("showInfo", true),
       showTimer: getQueryParam("showTimer", true),
     };
@@ -134,6 +135,9 @@ class ClipPlayerApp {
       }
 
       console.log("Playing clip:", clip.title);
+
+      // Notify UI manager that a new clip is starting (for periodic logo display)
+      this.uiManager.onNewClip();
 
       // Update UI with clip info
       this.uiManager.updateClipInfo(clip);
