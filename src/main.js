@@ -57,7 +57,7 @@ class ClipPlayerApp {
       showLogo: getQueryParam("showLogo", true),
       logoFreq: getQueryParam("logoFreq", 5), // Show logo every N clips
       showInfo: getQueryParam("showInfo", true),
-      showTimer: getQueryParam("showTimer", true),
+      showTimer: getQueryParam("showTimer", false),
     };
   }
 
@@ -110,6 +110,7 @@ class ClipPlayerApp {
         volume: this.config.volume,
         onClipEnd: () => this.playNextClip(),
         onVideoStart: () => this.uiManager.hideLoadingScreen(),
+        onTimeUpdate: (seconds) => this.uiManager.updateCountdownTimer(seconds),
       });
 
       // Start playing the first clip

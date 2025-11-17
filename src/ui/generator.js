@@ -279,7 +279,7 @@ export class URLGenerator {
 
                   <div class="form-group checkbox-group">
                     <label>
-                      <input type="checkbox" id="showTimer" name="showTimer" checked>
+                      <input type="checkbox" id="showTimer" name="showTimer">
                       <span class="checkmark"></span>
                       Show Timer
                     </label>
@@ -373,12 +373,17 @@ export class URLGenerator {
       }
     }
 
-    // Handle checkboxes (they're only included if checked)
-    const checkboxes = ["showLogo", "showInfo", "showTimer"];
-    checkboxes.forEach((checkbox) => {
+    // Handle checkboxes - only add to URL if different from default
+    const checkboxDefaults = {
+      showLogo: true,
+      showInfo: true,
+      showTimer: false
+    };
+    
+    Object.entries(checkboxDefaults).forEach(([checkbox, defaultValue]) => {
       const element = document.getElementById(checkbox);
-      if (!element.checked) {
-        params.set(checkbox, "false");
+      if (element && element.checked !== defaultValue) {
+        params.set(checkbox, element.checked.toString());
       }
     });
 
@@ -541,7 +546,7 @@ export class URLGenerator {
 
     const showLogo = document.getElementById("showLogo")?.checked ?? true;
     const showInfo = document.getElementById("showInfo")?.checked ?? true;
-    const showTimer = document.getElementById("showTimer")?.checked ?? true;
+    const showTimer = document.getElementById("showTimer")?.checked ?? false;
 
     const directiveLogo = this.container.querySelector("#directive-logo");
     const directiveInfo = this.container.querySelector("#directive-info");

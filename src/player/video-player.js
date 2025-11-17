@@ -7,6 +7,9 @@ export class VideoPlayer {
     this.volume = options.volume || 0.5;
     this.onClipEnd = options.onClipEnd || (() => {});
     this.onVideoStart = options.onVideoStart || (() => {});
+    this.onTimeUpdate = options.onTimeUpdate || (() => {});
+
+    this.countdownInterval = null;
 
     this.setupEventListeners();
   }
@@ -17,11 +20,13 @@ export class VideoPlayer {
   setupEventListeners() {
     this.videoElement.addEventListener("ended", () => {
       console.log("Clip ended, triggering next clip");
+      this.stopCountdown();
       this.onClipEnd();
     });
 
     this.videoElement.addEventListener("error", (error) => {
       console.error("Video playback error:", error);
+      this.stopCountdown();
       // Retry after a short delay
       setTimeout(() => {
         this.onClipEnd();
@@ -38,8 +43,47 @@ export class VideoPlayer {
 
     this.videoElement.addEventListener("playing", () => {
       console.log("Video is now playing");
+      this.startCountdown();
       this.onVideoStart();
     });
+
+    this.videoElement.addEventListener("pause", () => {
+      this.stopCountdown();
+    });
+
+    this.videoElement.addEventListener("seeking", () => {
+      this.stopCountdown();
+    });
+
+    this.videoElement.addEventListener("seeked", () => {
+      if (!this.videoElement.paused) {
+        this.startCountdown();
+      }
+    });
+  }
+
+  /**
+   * Start the countdown timer
+   */
+  startCountdown() {
+    this.stopCountdown(); // Clear any existing interval
+
+    this.countdownInterval = setInterval(() => {
+      if (!this.videoElement.paused && !this.videoElement.ended) {
+        const remaining = Math.ceil(this.videoElement.duration - this.videoElement.currentTime);
+        this.onTimeUpdate(remaining);
+      }
+    }, 100); // Update every 100ms for smooth countdown
+  }
+
+  /**
+   * Stop the countdown timer
+   */
+  stopCountdown() {
+    if (this.countdownInterval) {
+      clearInterval(this.countdownInterval);
+      this.countdownInterval = null;
+    }
   }
 
   /**
