@@ -1,7 +1,8 @@
 import { smartShuffle, filterByDateRange } from "../utils/array.js";
 import {
-  fetchChannelClips,
   fetchDiverseClips,
+  fetchMultipleCriteriaClips,
+  fetchClipsCards,
   getClipPlaybackUrl,
 } from "../api/twitch.js";
 
@@ -36,18 +37,18 @@ export class PlaylistManager {
       this.shuffleStrategy = shuffleStrategy;
 
       console.log(
-        `🚀 Fast loading first batch of clips for immediate playback...`
+        `🚀 Fast loading diverse clips with multiple criteria for immediate playback...`
       );
 
-      // Fetch just the first batch (100 clips) for immediate playback
-      const result = await fetchChannelClips(channelName, 100);
+      // Fetch clips using multiple criteria for maximum randomness
+      const result = await fetchMultipleCriteriaClips(channelName, days);
       let clips = result.clips;
 
       if (clips.length === 0) {
         throw new Error(`No clips found for channel: ${channelName}`);
       }
 
-      console.log(`Initial batch: ${clips.length} clips`);
+      console.log(`Initial diverse batch: ${clips.length} clips`);
 
       // Apply filters to initial batch
       clips = this.applyFilters(clips, days, minViews);
@@ -66,13 +67,14 @@ export class PlaylistManager {
         `✨ Ready to play with ${this.playlist.length} clips! Loading more in background...`
       );
 
-      // Start background loading of remaining clips
+      // Start background loading of remaining clips using pagination info from initial fetch
       this.backgroundLoadingPromise = this.loadRemainingClips(
         channelName,
         days,
         minViews,
-        result.endCursor,
-        result.hasNextPage
+        result.endCursor,    // Use cursor from primary filter
+        result.hasNextPage,  // Use hasNextPage from primary filter
+        result.primaryFilter // Pass the primary filter for continued pagination
       );
 
       return;
@@ -96,7 +98,8 @@ export class PlaylistManager {
     days,
     minViews,
     startCursor,
-    hasNextPage
+    hasNextPage,
+    primaryFilter = null
   ) {
     if (!hasNextPage || !startCursor) {
       console.log("✅ All clips already loaded");
@@ -105,13 +108,15 @@ export class PlaylistManager {
     }
 
     try {
-      console.log("📦 Loading additional clips in background...");
+      console.log(`📦 Loading additional clips in background using ${primaryFilter || 'default'} filter...`);
 
-      // Fetch remaining clips with pagination starting from where we left off
+      // Use fetchDiverseClips for continued pagination with the same filter
       const remainingClips = await fetchDiverseClips(
         channelName,
         this.maxClipsToFetch - this.playlist.length,
-        startCursor
+        startCursor,
+        days,
+        primaryFilter  // Pass the specific filter to continue pagination correctly
       );
 
       if (remainingClips.length === 0) {
@@ -128,27 +133,35 @@ export class PlaylistManager {
       const filteredClips = this.applyFilters(remainingClips, days, minViews);
 
       if (filteredClips.length > 0) {
-        // Merge new clips into existing playlist (reshuffled)
-        const allClips = [...this.playlist, ...filteredClips];
-        const currentClip = this.playlist[this.currentIndex - 1]; // Remember current position
+        // Remove duplicates before merging
+        const existingIds = new Set(this.playlist.map(clip => clip.id));
+        const newClips = filteredClips.filter(clip => !existingIds.has(clip.id));
+        
+        if (newClips.length > 0) {
+          // Merge new clips into existing playlist (reshuffled)
+          const allClips = [...this.playlist, ...newClips];
+          const currentClip = this.playlist[this.currentIndex - 1]; // Remember current position
 
-        // Reshuffle the combined playlist
-        this.playlist = smartShuffle(allClips, this.shuffleStrategy);
+          // Reshuffle the combined playlist
+          this.playlist = smartShuffle(allClips, this.shuffleStrategy);
 
-        // Try to maintain current position (find the clip we were just playing)
-        if (currentClip) {
-          const currentClipIndex = this.playlist.findIndex(
-            (clip) => clip.id === currentClip.id
-          );
-          if (currentClipIndex >= 0) {
-            this.currentIndex = currentClipIndex + 1;
+          // Try to maintain current position (find the clip we were just playing)
+          if (currentClip) {
+            const currentClipIndex = this.playlist.findIndex(
+              (clip) => clip.id === currentClip.id
+            );
+            if (currentClipIndex >= 0) {
+              this.currentIndex = currentClipIndex + 1;
+            }
           }
-        }
 
-        console.log(
-          `✨ Expanded playlist to ${this.playlist.length} clips total`
-        );
-        this.logPlaylistStats();
+          console.log(
+            `✨ Expanded playlist to ${this.playlist.length} clips total (added ${newClips.length} new clips)`
+          );
+          this.logPlaylistStats();
+        } else {
+          console.log("No new unique clips found in background fetch");
+        }
       }
 
       this.isLoadingComplete = true;
