@@ -7,6 +7,13 @@ body {
   overflow: hidden;
   background: black;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 /* Video player styles */
@@ -664,12 +671,18 @@ video {
   color: #0f172a;
   cursor: pointer;
   transition: all 0.2s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .streamer-btn:hover {
   border-color: #dc2626;
   color: #dc2626;
   transform: translateY(-1px);
+}
+
+.streamer-btn:active {
+  transform: scale(0.95);
 }
 
 
@@ -719,10 +732,16 @@ video {
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .copy-btn:hover {
   background: rgba(255, 255, 255, 0.25);
+}
+
+.copy-btn:active {
+  transform: scale(0.95);
 }
 
 .action-buttons {
@@ -740,6 +759,8 @@ video {
   font-size: 0.95rem;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .launch-btn {
@@ -750,6 +771,10 @@ video {
 .launch-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 12px 30px rgba(220, 38, 38, 0.35);
+}
+
+.launch-btn:active {
+  transform: translateY(0);
 }
 
 .test-btn {
@@ -763,7 +788,33 @@ video {
   border-color: white;
 }
 
+.test-btn:active {
+  transform: translateY(0);
+}
+
 /* Responsive design */
+@media (max-width: 1024px) {
+  .generator-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .overview-panel {
+    position: relative !important;
+    top: 0 !important;
+    width: 100%;
+  }
+
+  .form-panel {
+    width: 100%;
+  }
+
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
   #loading-screen {
     font-size: 1.5rem;
@@ -777,6 +828,7 @@ video {
     right: 10px;
     max-width: none;
     font-size: 0.8rem;
+    padding: 12px;
   }
 
   #countdown-timer {
@@ -801,37 +853,175 @@ video {
     font-size: 0.6rem;
   }
 
+  /* Generator mobile styles */
   .generator-content {
-    padding: 15px;
+    padding: 24px 16px 48px;
+    min-height: auto;
   }
 
-  .generator-body {
+  .generator-layout {
+    display: flex !important;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .overview-panel {
+    position: static !important;
+    padding: 24px;
+    border-radius: 20px;
+    width: 100%;
+    margin-bottom: 0;
+  }
+
+  .form-panel {
+    width: 100%;
+  }
+
+  .brand-lockup {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .brand-mark {
+    width: 56px;
+    height: 56px;
+  }
+
+  .brand-lockup h1 {
+    font-size: 2rem;
+  }
+
+  .metrics-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .metric-card {
+    padding: 16px;
+  }
+
+  .channel-spotlight {
     padding: 20px;
   }
 
-  .generator-header h1 {
-    font-size: 2em;
+  .channel-spotlight h3 {
+    font-size: 1.5rem;
   }
 
-  .generator-header p {
-    font-size: 1em;
+  .spotlight-stats {
+    grid-template-columns: repeat(2, 1fr);
+    padding: 16px;
+  }
+
+  .brand-directives {
+    padding: 20px;
+  }
+
+  .brand-directives-header h3 {
+    font-size: 1.2rem;
+  }
+
+  .compliance-card {
+    padding: 20px;
+  }
+
+  .compliance-header h3 {
+    font-size: 1.1rem;
+  }
+
+  .form-panel {
+    padding: 24px;
+    border-radius: 20px;
+  }
+
+  .form-panel-header h2 {
+    font-size: 1.6rem;
+  }
+
+  .form-section {
+    padding: 20px 0;
+  }
+
+  .section-heading {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .section-heading h3 {
+    font-size: 1.1rem;
   }
 
   .form-row {
     grid-template-columns: 1fr;
-    gap: 15px;
+    gap: 16px;
+  }
+
+  .form-row.compact {
+    grid-template-columns: 1fr;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-group input,
+  .form-group select {
+    padding: 12px;
+  }
+
+  .popular-streamers {
+    padding: 16px;
+  }
+
+  .streamer-buttons {
+    gap: 6px;
+  }
+
+  .streamer-btn {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+
+  .url-preview {
+    padding: 20px;
+  }
+
+  .preview-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .preview-header h3 {
+    font-size: 1.1rem;
   }
 
   .url-container {
     flex-direction: column;
+    gap: 10px;
+  }
+
+  #generated-url {
+    padding: 12px;
+    font-size: 0.85rem;
+    word-break: break-all;
+  }
+
+  .copy-btn {
+    width: 100%;
+    padding: 12px 18px;
   }
 
   .action-buttons {
     flex-direction: column;
+    gap: 10px;
   }
 
-  .streamer-buttons {
-    justify-content: center;
+  .launch-btn,
+  .test-btn {
+    padding: 14px 18px;
   }
 
   .footer-content {
@@ -855,16 +1045,197 @@ video {
 }
 
 @media (max-width: 480px) {
-  .generator-header h1 {
-    font-size: 1.8em;
+  .generator-content {
+    padding: 16px 12px 40px;
   }
 
-  .generator-header p {
-    font-size: 1em;
+  .overview-panel {
+    padding: 20px;
+    border-radius: 16px;
   }
 
-  .form-section h2 {
-    font-size: 1.2em;
+  .brand-mark {
+    width: 48px;
+    height: 48px;
+  }
+
+  .brand-lockup h1 {
+    font-size: 1.75rem;
+  }
+
+  .eyebrow,
+  .panel-eyebrow {
+    font-size: 0.7rem;
+  }
+
+  .lede {
+    font-size: 0.9rem;
+  }
+
+  .metric-card {
+    padding: 14px;
+  }
+
+  .metric-card strong {
+    font-size: 1.1rem;
+  }
+
+  .channel-spotlight {
+    padding: 16px;
+  }
+
+  .channel-spotlight h3 {
+    font-size: 1.3rem;
+  }
+
+  #spotlight-detail {
+    font-size: 0.9rem;
+  }
+
+  .spotlight-stats {
+    grid-template-columns: 1fr;
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .spotlight-tags span {
+    font-size: 0.7rem;
+    padding: 5px 12px;
+  }
+
+  .brand-directives {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .directive-list li {
+    padding: 10px 14px;
+    font-size: 0.85rem;
+  }
+
+  .compliance-card {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .resource-links {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .resource-links a {
+    text-align: center;
+    padding: 10px 16px;
+  }
+
+  .form-panel {
+    padding: 20px;
+    border-radius: 16px;
+  }
+
+  .form-panel-header h2 {
+    font-size: 1.4rem;
+  }
+
+  .form-panel-header p {
+    font-size: 0.9rem;
+  }
+
+  .section-heading h3 {
+    font-size: 1rem;
+  }
+
+  .section-heading p {
+    font-size: 0.85rem;
+  }
+
+  .form-group label {
+    font-size: 0.9rem;
+  }
+
+  .form-group input,
+  .form-group select {
+    padding: 11px;
+    font-size: 0.9rem;
+  }
+
+  .popular-streamers {
+    padding: 14px;
+  }
+
+  .popular-header p {
+    font-size: 0.9rem;
+  }
+
+  .streamer-btn {
+    padding: 7px 11px;
+    font-size: 0.75rem;
+  }
+
+  .url-preview {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .preview-header h3 {
+    font-size: 1rem;
+  }
+
+  #generated-url {
+    padding: 11px;
+    font-size: 0.8rem;
+    border-radius: 10px;
+  }
+
+  .launch-btn,
+  .test-btn {
+    padding: 13px 16px;
+    font-size: 0.9rem;
+    border-radius: 12px;
+  }
+
+  #clip-info {
+    padding: 10px;
+    font-size: 0.75rem;
+    border-radius: 6px;
+  }
+
+  #countdown-timer {
+    font-size: 1.3rem;
+  }
+}
+
+/* Mobile landscape orientation */
+@media (max-height: 500px) and (orientation: landscape) {
+  .generator-content {
+    padding: 16px;
+  }
+
+  .brand-lockup {
+    flex-direction: row;
+    gap: 12px;
+  }
+
+  .brand-mark {
+    width: 48px;
+    height: 48px;
+  }
+
+  .brand-lockup h1 {
+    font-size: 1.5rem;
+  }
+
+  .overview-panel,
+  .form-panel {
+    padding: 20px;
+  }
+
+  .form-section {
+    padding: 16px 0;
+  }
+
+  .metrics-grid {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
