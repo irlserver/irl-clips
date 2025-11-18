@@ -32,38 +32,6 @@ function getDynamicFilter(days) {
  * @param {string} cursor - Pagination cursor (optional)
  * @returns {Promise<Object>} Object containing clips array and pagination info
  */
-/**
- * Fetch clips using the ClipsCards__User operation (more reliable method)
- * @param {string} channelName - Twitch channel name
- * @param {number} limit - Number of clips to fetch (max 100 per request)
- * @param {string} filter - Time filter (LAST_DAY, LAST_WEEK, LAST_MONTH, ALL_TIME)
- * @param {string} cursor - Pagination cursor (optional)
- * @returns {Promise<Object>} Object containing clips array and pagination info
- */
-/**
- * Fetch clips using the ClipsCards__User operation (more reliable method)
- * @param {string} channelName - Twitch channel name
- * @param {number} limit - Number of clips to fetch (max 100 per request)
- * @param {string} filter - Time filter (LAST_DAY, LAST_WEEK, LAST_MONTH, ALL_TIME)
- * @param {string} cursor - Pagination cursor (optional)
- * @returns {Promise<Object>} Object containing clips array and pagination info
- */
-/**
- * Fetch clips using the ClipsCards__User operation (more reliable method)
- * @param {string} channelName - Twitch channel name
- * @param {number} limit - Number of clips to fetch (max 100 per request)
- * @param {string} filter - Time filter (LAST_DAY, LAST_WEEK, LAST_MONTH, ALL_TIME)
- * @param {string} cursor - Pagination cursor (optional)
- * @returns {Promise<Object>} Object containing clips array and pagination info
- */
-/**
- * Fetch clips using the ClipsCards__User operation (more reliable method)
- * @param {string} channelName - Twitch channel name
- * @param {number} limit - Number of clips to fetch (max 100 per request)
- * @param {string} filter - Time filter (LAST_DAY, LAST_WEEK, LAST_MONTH, ALL_TIME)
- * @param {string} cursor - Pagination cursor (optional)
- * @returns {Promise<Object>} Object containing clips array and pagination info
- */
 export async function fetchClipsCards(
   channelName,
   limit = 100,
@@ -99,11 +67,7 @@ export async function fetchClipsCards(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Client-ID": CLIENT_ID,
-        "User-Agent":
-          "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36",
-        Referer: "https://www.twitch.tv/",
-        Origin: "https://www.twitch.tv/",
+        "Client-ID": CLIENT_ID
       },
       body: JSON.stringify({
         operationName: "ClipsCards__User",
@@ -245,12 +209,6 @@ export async function fetchClipsCards(
  * Fetch clips with multiple simultaneous requests using the more reliable ClipsCards method
  * @param {string} channelName - Twitch channel name
  * @param {number} days - Number of days to consider for filter selection
- * @returns {Promise<Array>} Array of clip objects from all fetches combined
- */
-/**
- * Fetch clips with multiple simultaneous requests using the more reliable ClipsCards method
- * @param {string} channelName - Twitch channel name
- * @param {number} days - Number of days to consider for filter selection
  * @returns {Promise<Object>} Object containing clips array and pagination info for the primary filter
  */
 export async function fetchMultipleCriteriaClips(channelName, days = 900) {
@@ -378,23 +336,6 @@ export async function fetchMultipleCriteriaClips(channelName, days = 900) {
   }
 }
 
-/**
- * Fetch a diverse set of clips using the ClipsCards method with pagination
- * @param {string} channelName - Twitch channel name
- * @param {number} totalClips - Total number of clips to attempt to fetch
- * @param {string} startCursor - Starting cursor for pagination (optional)
- * @param {number} days - Number of days to consider for filter selection
- * @returns {Promise<Array>} Array of clip objects
- */
-/**
- * Fetch a diverse set of clips using the ClipsCards method with pagination
- * @param {string} channelName - Twitch channel name
- * @param {number} totalClips - Total number of clips to attempt to fetch
- * @param {string} startCursor - Starting cursor for pagination (optional)
- * @param {number} days - Number of days to consider for filter selection
- * @param {string} specificFilter - Specific filter to use (overrides days-based filter)
- * @returns {Promise<Array>} Array of clip objects
- */
 /**
  * Fetch a diverse set of clips using the ClipsCards method with pagination
  * @param {string} channelName - Twitch channel name
