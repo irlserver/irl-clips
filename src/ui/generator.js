@@ -566,8 +566,8 @@ export class URLGenerator {
 
     if (directiveTimer) {
       directiveTimer.textContent = showTimer
-        ? "Countdown timer signals when you expect to be back"
-        : "Countdown timer hidden when timing is unknown";
+        ? "Countdown timer shows the remaining time of the current clip"
+        : "Countdown timer is turned off for uninterrupted viewing";
     }
   }
 }
