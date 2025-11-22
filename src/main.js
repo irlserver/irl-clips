@@ -102,15 +102,22 @@ class ClipPlayerApp {
 
       // Initialize video player
       const videoElement = document.getElementById("clip-player");
+      const preloadElement = document.getElementById("clip-preloader");
       if (!videoElement) {
         throw new Error("Video element not found");
       }
 
       this.videoPlayer = new VideoPlayer(videoElement, {
+        preloadElement: preloadElement,
         volume: this.config.volume,
         onClipEnd: () => this.playNextClip(),
-        onVideoStart: () => this.uiManager.hideLoadingScreen(),
+        onVideoStart: () => {
+          this.uiManager.hideLoadingScreen();
+          // Start preloading the next clip when current one starts playing
+          this.preloadNextClip();
+        },
         onTimeUpdate: (seconds) => this.uiManager.updateCountdownTimer(seconds),
+        onPreloadReady: () => console.log("✅ Next clip ready for instant playback"),
       });
 
       // Start playing the first clip
@@ -121,6 +128,36 @@ class ClipPlayerApp {
     } catch (error) {
       console.error("❌ Failed to initialize clip player:", error);
       this.handleError(error);
+    }
+  }
+
+  /**
+   * Preload the next clip in the background
+   */
+  async preloadNextClip() {
+    try {
+      // Peek at the next clip without advancing the playlist
+      const nextClipIndex = this.playlistManager.currentIndex;
+      if (nextClipIndex >= this.playlistManager.playlist.length) {
+        // Would need to reshuffle, skip preloading
+        return;
+      }
+
+      const nextClip = this.playlistManager.playlist[nextClipIndex];
+      if (!nextClip) {
+        return;
+      }
+
+      console.log("📥 Preparing to preload next clip:", nextClip.title);
+
+      // Get playback URL for next clip
+      const playbackUrl = await this.playlistManager.getClipPlaybackUrl(nextClip);
+      if (playbackUrl && this.videoPlayer) {
+        this.videoPlayer.preloadNextClip(playbackUrl);
+      }
+    } catch (error) {
+      console.warn("Failed to preload next clip:", error);
+      // Non-fatal error, just continue without preloading
     }
   }
 

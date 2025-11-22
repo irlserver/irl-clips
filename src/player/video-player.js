@@ -4,14 +4,21 @@
 export class VideoPlayer {
   constructor(videoElement, options = {}) {
     this.videoElement = videoElement;
+    this.preloadElement = options.preloadElement || null;
     this.volume = options.volume || 0.5;
     this.onClipEnd = options.onClipEnd || (() => {});
     this.onVideoStart = options.onVideoStart || (() => {});
     this.onTimeUpdate = options.onTimeUpdate || (() => {});
+    this.onPreloadReady = options.onPreloadReady || (() => {});
 
     this.countdownInterval = null;
+    this.preloadedUrl = null;
+    this.isPreloading = false;
 
     this.setupEventListeners();
+    if (this.preloadElement) {
+      this.setupPreloadListeners();
+    }
   }
 
   /**
@@ -63,6 +70,26 @@ export class VideoPlayer {
   }
 
   /**
+   * Setup preload element event listeners
+   */
+  setupPreloadListeners() {
+    this.preloadElement.addEventListener("canplaythrough", () => {
+      if (this.isPreloading) {
+        console.log("✅ Next clip preloaded and ready:", this.preloadedUrl);
+        this.onPreloadReady();
+      }
+    });
+
+    this.preloadElement.addEventListener("error", (error) => {
+      if (this.isPreloading) {
+        console.warn("⚠️ Preload failed for:", this.preloadedUrl, error);
+        this.isPreloading = false;
+        this.preloadedUrl = null;
+      }
+    });
+  }
+
+  /**
    * Start the countdown timer
    */
   startCountdown() {
@@ -87,18 +114,72 @@ export class VideoPlayer {
   }
 
   /**
+   * Preload the next clip in the background
+   * @param {string} playbackUrl - Video playback URL to preload
+   */
+  preloadNextClip(playbackUrl) {
+    if (!this.preloadElement || !playbackUrl) {
+      return;
+    }
+
+    // Don't preload if already preloading or if it's the same URL
+    if (this.isPreloading || this.preloadedUrl === playbackUrl) {
+      return;
+    }
+
+    console.log("🔄 Preloading next clip in background:", playbackUrl);
+    this.isPreloading = true;
+    this.preloadedUrl = playbackUrl;
+    this.preloadElement.src = playbackUrl;
+    this.preloadElement.volume = this.volume;
+    this.preloadElement.load(); // Start loading
+  }
+
+  /**
    * Play a clip with the given URL
    * @param {string} playbackUrl - Video playback URL
+   * @param {boolean} usePreloaded - Whether to try using the preloaded clip
    * @returns {Promise<void>}
    */
-  async playClip(playbackUrl) {
+  async playClip(playbackUrl, usePreloaded = true) {
     try {
-      this.videoElement.src = playbackUrl;
-      this.videoElement.volume = this.volume;
+      // Check if we can use the preloaded video
+      if (usePreloaded && this.preloadElement && this.preloadedUrl === playbackUrl && this.preloadElement.readyState >= 3) {
+        console.log("🚀 Using preloaded clip (instant playback)");
+        
+        // Swap the video elements by swapping their sources and states
+        const currentSrc = this.videoElement.src;
+        this.videoElement.src = this.preloadElement.src;
+        this.videoElement.volume = this.volume;
+        
+        // Clear the preload element
+        this.preloadElement.src = "";
+        this.preloadedUrl = null;
+        this.isPreloading = false;
 
-      // Wait for the video to be ready and then play
-      await this.videoElement.play();
-      console.log("Video started playing");
+        // Play the video
+        await this.videoElement.play();
+        console.log("Video started playing (from preload)");
+      } else {
+        // Normal playback without preload
+        if (usePreloaded && this.preloadedUrl === playbackUrl) {
+          console.log("⏳ Preload not ready yet, loading normally");
+        }
+        
+        this.videoElement.src = playbackUrl;
+        this.videoElement.volume = this.volume;
+
+        // Clear preload state if we're loading a different video
+        if (this.preloadedUrl !== playbackUrl && this.preloadElement) {
+          this.preloadElement.src = "";
+          this.preloadedUrl = null;
+          this.isPreloading = false;
+        }
+
+        // Wait for the video to be ready and then play
+        await this.videoElement.play();
+        console.log("Video started playing");
+      }
     } catch (error) {
       console.error("Failed to play video:", error);
       // Retry after a short delay
