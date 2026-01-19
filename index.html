@@ -3,43 +3,647 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>IRLServer - Twitch Clip Player</title>
-    <meta
-      name="description"
-      content="Advanced Twitch Clip Player with intelligent shuffling - Created by IRLServer.com"
-    />
-    <meta name="author" content="IRLServer.com" />
-    <meta name="copyright" content="© 2025 IRLServer.com - CC BY 4.0 License" />
-    <meta name="generator" content="IRLServer.com Clip Player" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
 
-    <!-- 
-      IRLServer Twitch Clip Player
-      Created by: IRLServer.com (https://irlserver.com)
-      License: Creative Commons Attribution 4.0 International (CC BY 4.0)
-      
-      ATTRIBUTION REQUIRED: When using, modifying, or redistributing this software,
-      you must credit IRLServer.com as the original creator and include a visible 
-      link to https://irlserver.com
-      
-      BRANDING STRATEGY: IRLServer.com branding appears prominently in the generator
-      interface but NOT in the actual clip player to keep the viewing experience clean.
-      
-      Full license: https://creativecommons.org/licenses/by/4.0/
-    -->
+    <!-- Primary Meta Tags -->
+    <title>BRB Screen - Professional Twitch Clip Player for Streamers | by IRLServer.com</title>
+    <meta name="title" content="BRB Screen - Professional Twitch Clip Player for Streamers | by IRLServer.com" />
+    <meta name="description" content="Keep your audience entertained during breaks with BRB Screen. Auto-plays your best Twitch clips, supports multiple channels, and works seamlessly with OBS. Free to use, powered by IRLServer.com." />
+    <meta name="keywords" content="BRB screen, Twitch clips, stream breaks, OBS browser source, Twitch clip player, streamer tools, BRB overlay, stream intermission, IRLServer, IRL streaming" />
+    <meta name="author" content="IRLServer.com" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#dc2626" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://brbscreen.com/" />
+    <meta property="og:title" content="BRB Screen - Professional Twitch Clip Player for Streamers" />
+    <meta property="og:description" content="Keep your audience entertained during breaks. Auto-plays your best Twitch clips with intelligent shuffling. Free and powered by IRLServer.com." />
+    <meta property="og:image" content="https://brbscreen.com/og-image.png" />
+    <meta property="og:site_name" content="BRB Screen" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://brbscreen.com/" />
+    <meta property="twitter:title" content="BRB Screen - Professional Twitch Clip Player for Streamers" />
+    <meta property="twitter:description" content="Keep your audience entertained during breaks. Auto-plays your best Twitch clips with intelligent shuffling. Free and powered by IRLServer.com." />
+    <meta property="twitter:image" content="https://brbscreen.com/og-image.png" />
+    <meta property="twitter:creator" content="@irlserver" />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://brbscreen.com/" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+    <!-- Preconnect for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+    <!-- Structured Data - Organization -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "BRB Screen",
+      "description": "Professional Twitch clip player for streamers. Keep your audience entertained during breaks with auto-playing clips.",
+      "url": "https://brbscreen.com",
+      "applicationCategory": "MultimediaApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "creator": {
+        "@type": "Organization",
+        "name": "IRLServer.com",
+        "url": "https://irlserver.com"
+      },
+      "featureList": [
+        "Auto-play Twitch clips",
+        "Multiple channel support",
+        "OBS browser source compatible",
+        "Intelligent shuffle algorithm",
+        "Customizable display options",
+        "No account required"
+      ]
+    }
+    </script>
+
+    <!-- Structured Data - FAQ -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is BRB Screen?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "BRB Screen is a free tool that automatically plays Twitch clips during your stream breaks. It keeps your audience entertained while you're away and can display clips from your own channel or any other Twitch channels."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I use BRB Screen with OBS?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Simply add a Browser Source in OBS, paste your generated BRB Screen URL, and set the dimensions to match your stream. Switch to this scene when you go on break, and clips will play automatically."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is BRB Screen free to use?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes! BRB Screen is completely free to use. It's powered by IRLServer.com and requires no account or subscription."
+          }
+        }
+      ]
+    }
+    </script>
+
+    <link rel="stylesheet" href="/src/styles/main.css" />
   </head>
   <body>
-    <div id="loading-screen">Loading clips...</div>
+    <!-- Landing Page -->
+    <div id="landing-page" class="hero-gradient">
+      <!-- Navigation -->
+      <nav class="navbar">
+        <div class="nav-content">
+          <a href="/" class="nav-brand">
+            <img src="/logo.webp" alt="BRB Screen" class="nav-logo" />
+            <span class="nav-title">BRB Screen</span>
+          </a>
+          <div class="nav-links">
+            <a href="#features">Features</a>
+            <a href="#how-it-works">How It Works</a>
+            <a href="#faq">FAQ</a>
+            <a href="https://irlserver.com" target="_blank" rel="noopener" class="nav-link-highlight">IRLServer.com</a>
+          </div>
+          <button class="mobile-menu-btn" aria-label="Toggle menu">
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+        </div>
+      </nav>
 
-    <video id="clip-player" autoplay playsinline></video>
-    <video id="clip-preloader" style="display: none;" preload="auto"></video>
+      <!-- Hero Section -->
+      <section class="hero-section">
+        <div class="hero-content">
+          <div class="hero-badge">
+            <span class="badge-dot"></span>
+            Powered by <a href="https://irlserver.com" target="_blank" rel="noopener">IRLServer.com</a>
+          </div>
+          <h1 class="hero-title">
+            Keep Your Audience<br />
+            <span class="gradient-text">Entertained</span> During Breaks
+          </h1>
+          <p class="hero-subtitle">
+            BRB Screen automatically plays your best Twitch clips while you're away.
+            No more silent "be right back" screens. Free, instant setup, works with OBS.
+          </p>
+          <div class="hero-cta">
+            <button type="button" class="btn btn-primary" id="open-generator-btn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              Create Your BRB Screen
+            </button>
+            <a href="#how-it-works" class="btn btn-secondary">
+              Learn More
+            </a>
+          </div>
+          <div class="hero-stats">
+            <div class="stat">
+              <strong>100%</strong>
+              <span>Free Forever</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat">
+              <strong>Instant</strong>
+              <span>No Account Needed</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat">
+              <strong>OBS</strong>
+              <span>Browser Source Ready</span>
+            </div>
+          </div>
+        </div>
+      </section>
 
-    <div id="clip-info"></div>
-    <div id="logo-container">
-      <img id="logo" src="/logo.webp" alt="Logo" />
-      <div id="logo-text">irlserver.com</div>
+      <!-- Features Section -->
+      <section id="features" class="features-section">
+        <div class="section-content">
+          <div class="section-header">
+            <span class="section-eyebrow">Features</span>
+            <h2 class="section-title">Everything You Need for Better Breaks</h2>
+            <p class="section-subtitle">Built by streamers, for streamers. Every feature designed to keep your viewers engaged.</p>
+          </div>
+          <div class="features-grid">
+            <div class="feature-card">
+              <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></svg>
+              </div>
+              <h3>Multi-Channel Support</h3>
+              <p>Play clips from your channel, friends, or any Twitch creator. Mix and match to create the perfect break content.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+              </div>
+              <h3>Smart Shuffle</h3>
+              <p>Intelligent algorithm ensures variety. No repeated clips back-to-back, weighted by popularity and recency.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+              </div>
+              <h3>OBS Ready</h3>
+              <p>Works perfectly as a Browser Source. Copy your URL, paste into OBS, and you're live in seconds.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              </div>
+              <h3>Fully Customizable</h3>
+              <p>Control volume, show/hide clip info, set countdown timers, add your logo. Make it match your brand.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+              </div>
+              <h3>No Account Required</h3>
+              <p>No sign-up, no login, no tracking. Generate your URL and start using it immediately. Your privacy matters.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+              </div>
+              <h3>Free Forever</h3>
+              <p>Completely free with no hidden costs. Powered by IRLServer.com as a gift to the streaming community.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- How It Works Section -->
+      <section id="how-it-works" class="how-section">
+        <div class="section-content">
+          <div class="section-header">
+            <span class="section-eyebrow">Setup</span>
+            <h2 class="section-title">Ready in 3 Simple Steps</h2>
+            <p class="section-subtitle">From zero to BRB screen in under a minute. No technical knowledge required.</p>
+          </div>
+          <div class="steps-grid">
+            <div class="step-card">
+              <div class="step-number">1</div>
+              <h3>Configure Your Clips</h3>
+              <p>Enter your Twitch channel name (or multiple channels), adjust settings like volume and clip info display.</p>
+            </div>
+            <div class="step-connector">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+            <div class="step-card">
+              <div class="step-number">2</div>
+              <h3>Copy Your URL</h3>
+              <p>Click "Copy URL" to get your personalized BRB Screen link with all your settings embedded.</p>
+            </div>
+            <div class="step-connector">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+            <div class="step-card">
+              <div class="step-number">3</div>
+              <h3>Add to OBS</h3>
+              <p>Create a Browser Source in OBS, paste the URL, set to 1920x1080, and you're done! Switch scenes when on break.</p>
+            </div>
+          </div>
+          <div class="steps-cta">
+            <button type="button" class="btn btn-primary open-generator-btn">Get Started Now</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Generator Modal -->
+      <div id="generator-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-container">
+          <button type="button" class="modal-close" id="close-generator-btn" aria-label="Close">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+          <div class="modal-content">
+            <div class="generator-layout">
+              <!-- Overview Panel -->
+              <aside class="overview-panel">
+                <div class="brand-lockup">
+                  <img src="/logo.webp" alt="BRB Screen Logo" class="brand-mark" />
+                  <div>
+                    <p class="eyebrow">Twitch Clip Player</p>
+                    <h1>BRB Screen</h1>
+                  </div>
+                </div>
+                <p class="lede">
+                  Keep your audience engaged during breaks with auto-playing Twitch clips.
+                  Powered by <a href="https://irlserver.com" target="_blank" rel="noopener" style="color: #fca5a5;">IRLServer.com</a>.
+                </p>
+
+                <div class="metrics-grid">
+                  <div class="metric-card">
+                    <span>Smart</span>
+                    <strong>Shuffle</strong>
+                    <p>Intelligent algorithm for variety</p>
+                  </div>
+                  <div class="metric-card">
+                    <span>Instant</span>
+                    <strong>Setup</strong>
+                    <p>No account required</p>
+                  </div>
+                </div>
+
+                <div class="streamer-focus">
+                  <div class="channel-spotlight">
+                    <p class="spotlight-label">Perfect For</p>
+                    <h3>Stream Breaks</h3>
+                    <p id="spotlight-detail">
+                      No more boring "BRB" screens. Show your best clips, collaborate with other streamers, or showcase community highlights.
+                    </p>
+                    <div class="spotlight-tags">
+                      <span>BRB Screens</span>
+                      <span>Starting Soon</span>
+                      <span>Intermissions</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="brand-directives">
+                  <div class="brand-directives-header">
+                    <p class="panel-eyebrow">Tip</p>
+                    <h3>Pro Tips</h3>
+                  </div>
+                  <ul class="directive-list">
+                    <li>Use multiple channels for more variety</li>
+                    <li>Set volume to match your stream audio</li>
+                    <li>Enable countdown for timed breaks</li>
+                    <li>Hide clip info for cleaner look</li>
+                  </ul>
+                </div>
+              </aside>
+
+              <!-- Form Panel -->
+              <div class="form-panel">
+                <div class="form-panel-header">
+                  <p class="panel-eyebrow">URL Generator</p>
+                  <h2>Configure Your BRB Screen</h2>
+                  <p>Customize your settings and generate a URL for OBS</p>
+                </div>
+
+                <form class="generator-form" id="clip-form">
+                  <!-- Channel Input Section -->
+                  <div class="form-section">
+                    <div class="section-heading">
+                      <h3>Channel Settings</h3>
+                      <p>Enter Twitch channel names</p>
+                    </div>
+                    <div class="form-group">
+                      <label for="channel">Channel Name(s)</label>
+                      <input
+                        type="text"
+                        id="channel"
+                        name="channel"
+                        placeholder="e.g., shroud, pokimane, xqc"
+                        required
+                      />
+                      <small>Separate multiple channels with commas</small>
+                    </div>
+
+                    <div class="popular-streamers">
+                      <div class="popular-header">
+                        <p>Popular IRL Streamers</p>
+                        <span>Click to add</span>
+                      </div>
+                      <div class="streamer-buttons" id="streamer-buttons">
+                        <!-- Populated by JavaScript -->
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Display Settings -->
+                  <div class="form-section">
+                    <div class="section-heading">
+                      <h3>Display Options</h3>
+                      <p>Customize the look</p>
+                    </div>
+                    <div class="form-row">
+                      <div class="form-group range-group">
+                        <label>Volume</label>
+                        <div class="range-input">
+                          <input
+                            type="range"
+                            id="volume"
+                            name="volume"
+                            min="0"
+                            max="100"
+                            value="50"
+                          />
+                          <span class="volume-value" id="volume-display">50%</span>
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label for="clips">Number of Clips</label>
+                        <select id="clips" name="clips">
+                          <option value="10">10 clips</option>
+                          <option value="25" selected>25 clips</option>
+                          <option value="50">50 clips</option>
+                          <option value="100">100 clips</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="checkbox-group">
+                      <label>
+                        <input type="checkbox" id="showInfo" name="showInfo" checked />
+                        <span class="checkmark"></span>
+                        Show clip info overlay
+                      </label>
+                    </div>
+                    <div class="checkbox-group">
+                      <label>
+                        <input type="checkbox" id="showLogo" name="showLogo" checked />
+                        <span class="checkmark"></span>
+                        Show logo watermark
+                      </label>
+                    </div>
+                  </div>
+
+                  <!-- Timer Settings -->
+                  <div class="form-section">
+                    <div class="section-heading">
+                      <h3>Timer Settings</h3>
+                      <p>Optional countdown timer</p>
+                    </div>
+                    <div class="form-row compact">
+                      <div class="form-group">
+                        <label for="timer">Countdown (minutes)</label>
+                        <input
+                          type="number"
+                          id="timer"
+                          name="timer"
+                          placeholder="0 = disabled"
+                          min="0"
+                          max="60"
+                          value="0"
+                        />
+                        <small>Shows countdown until stream resumes</small>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+
+                <!-- URL Preview -->
+                <div class="url-preview">
+                  <div class="preview-header">
+                    <div>
+                      <p class="panel-eyebrow">Generated URL</p>
+                      <h3>Your BRB Screen Link</h3>
+                    </div>
+                  </div>
+                  <div class="url-container">
+                    <input
+                      type="text"
+                      id="generated-url"
+                      readonly
+                      value="https://brbscreen.com/?channel=yourchannel"
+                    />
+                    <button type="button" class="copy-btn" id="copy-btn">
+                      Copy
+                    </button>
+                  </div>
+                  <div class="action-buttons">
+                    <button type="button" class="launch-btn" id="launch-btn">
+                      Launch Full Screen
+                    </button>
+                    <button type="button" class="test-btn" id="test-btn">
+                      Preview in New Tab
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FAQ Section -->
+      <section id="faq" class="faq-section">
+        <div class="section-content">
+          <div class="section-header">
+            <span class="section-eyebrow">FAQ</span>
+            <h2 class="section-title">Frequently Asked Questions</h2>
+          </div>
+          <div class="faq-grid">
+            <div class="faq-item">
+              <h3>What is BRB Screen?</h3>
+              <p>BRB Screen is a free tool that automatically plays Twitch clips during your stream breaks. It keeps your audience entertained while you're away and can display clips from your own channel or any other Twitch channels.</p>
+            </div>
+            <div class="faq-item">
+              <h3>How do I add this to OBS?</h3>
+              <p>Add a Browser Source in OBS, paste your generated URL, and set the dimensions to 1920x1080 (or your stream resolution). Create a scene with this source and switch to it when you go on break.</p>
+            </div>
+            <div class="faq-item">
+              <h3>Can I use clips from multiple channels?</h3>
+              <p>Yes! Enter multiple channel names separated by commas. The clips will be shuffled together for variety. Great for collaborations or showcasing your favorite streamers.</p>
+            </div>
+            <div class="faq-item">
+              <h3>Is this free? What's the catch?</h3>
+              <p>It's completely free with no catch. BRB Screen is a community project powered by <a href="https://irlserver.com" target="_blank" rel="noopener">IRLServer.com</a>. We don't track you, sell data, or require accounts.</p>
+            </div>
+            <div class="faq-item">
+              <h3>Will clips repeat during my break?</h3>
+              <p>Our smart shuffle algorithm prevents back-to-back repeats and prioritizes variety. Clips are weighted by popularity and recency to show your best content.</p>
+            </div>
+            <div class="faq-item">
+              <h3>Can I customize the appearance?</h3>
+              <p>Yes! You can adjust volume, show/hide clip info overlays, add countdown timers, and more. The URL contains all your settings, so save it for future use.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- IRLServer Promo Section -->
+      <section class="promo-section">
+        <div class="section-content">
+          <div class="promo-card">
+            <div class="promo-content">
+              <span class="section-eyebrow">From the makers of BRB Screen</span>
+              <h2 class="promo-title">Professional IRL Streaming Infrastructure</h2>
+              <p class="promo-subtitle">
+                Take your IRL streams to the next level with IRLServer.com's global streaming endpoints.
+                Ultra-low latency, maximum reliability, and unlimited bandwidth.
+              </p>
+              <div class="promo-features">
+                <div class="promo-feature">
+                  <div class="promo-feature-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                  </div>
+                  <div>
+                    <h4>RTMP & RTMPS</h4>
+                    <p>Traditional streaming protocols with global edge servers. Use your own OBS for overlays.</p>
+                  </div>
+                </div>
+                <div class="promo-feature">
+                  <div class="promo-feature-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                  </div>
+                  <div>
+                    <h4>SRT Endpoints</h4>
+                    <p>Secure Reliable Transport for low-latency streaming over unpredictable networks.</p>
+                  </div>
+                </div>
+                <div class="promo-feature">
+                  <div class="promo-feature-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>
+                  </div>
+                  <div>
+                    <h4>SRTLA Bonding</h4>
+                    <p>Bond multiple connections (4G/5G/WiFi) with custom SRTLA optimizations for IRL.</p>
+                  </div>
+                </div>
+              </div>
+              <div class="promo-stats">
+                <div class="promo-stat">
+                  <strong>30+</strong>
+                  <span>Active Streamers</span>
+                </div>
+                <div class="promo-stat">
+                  <strong>99.9%</strong>
+                  <span>Uptime</span>
+                </div>
+                <div class="promo-stat">
+                  <strong>24/7</strong>
+                  <span>Support</span>
+                </div>
+              </div>
+              <div class="promo-cta">
+                <a href="https://irlserver.com" target="_blank" rel="noopener" class="btn btn-primary">
+                  Explore IRLServer.com
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                </a>
+                <a href="https://irlserver.com/pricing" target="_blank" rel="noopener" class="btn btn-secondary">
+                  From $9.99/mo
+                </a>
+              </div>
+            </div>
+            <div class="promo-visual">
+              <div class="endpoint-cards">
+                <div class="endpoint-card rtmp">
+                  <span class="endpoint-badge">RTMP</span>
+                  <code>Unlimited bandwidth</code>
+                </div>
+                <div class="endpoint-card srt">
+                  <span class="endpoint-badge">SRT</span>
+                  <code>Up to 20Mb/s input</code>
+                </div>
+                <div class="endpoint-card srtla">
+                  <span class="endpoint-badge">SRTLA</span>
+                  <code>Drop protection with NOALBS</code>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Footer -->
+      <footer class="site-footer">
+        <div class="footer-content">
+          <div class="footer-brand">
+            <img src="/logo.webp" alt="BRB Screen" class="footer-logo" />
+            <div class="footer-brand-text">
+              <h4>BRB Screen</h4>
+              <p>A free tool for streamers, powered by <a href="https://irlserver.com" target="_blank" rel="noopener">IRLServer.com</a></p>
+            </div>
+          </div>
+          <div class="footer-links">
+            <div class="footer-column">
+              <h5>Product</h5>
+              <a href="#features">Features</a>
+              <a href="#how-it-works">How It Works</a>
+              <a href="#generator">URL Generator</a>
+            </div>
+            <div class="footer-column">
+              <h5>IRLServer</h5>
+              <a href="https://irlserver.com" target="_blank" rel="noopener">Main Site</a>
+              <a href="https://irlserver.com/pricing" target="_blank" rel="noopener">Pricing</a>
+              <a href="https://status.irlserver.com" target="_blank" rel="noopener">Status</a>
+            </div>
+            <div class="footer-column">
+              <h5>Community</h5>
+              <a href="https://discord.gg/irlserver" target="_blank" rel="noopener">Discord</a>
+              <a href="https://twitter.com/irlserver" target="_blank" rel="noopener">Twitter</a>
+              <a href="https://github.com/irlserver" target="_blank" rel="noopener">GitHub</a>
+            </div>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p>&copy; 2025 BRB Screen. A project by <a href="https://irlserver.com" target="_blank" rel="noopener">IRLServer.com</a></p>
+        </div>
+      </footer>
     </div>
-    <div id="countdown-timer"></div>
+
+    <!-- Video Player (Hidden until URL params trigger it) -->
+    <div id="player-mode" style="display: none;">
+      <div id="loading-screen">Loading clips...</div>
+      <video id="clip-player" autoplay playsinline></video>
+      <video id="clip-preloader" style="display: none;" preload="auto"></video>
+      <div id="clip-info"></div>
+      <div id="logo-container">
+        <img id="logo" src="/logo.webp" alt="Logo" />
+        <div id="logo-text">brbscreen.com</div>
+      </div>
+      <div id="countdown-timer"></div>
+    </div>
 
     <script type="module" src="/src/main.js"></script>
   </body>

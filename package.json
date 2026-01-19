@@ -1,10 +1,10 @@
 {
-  "name": "irl-clips",
-  "version": "1.0.0",
+  "name": "brb-screen",
+  "version": "2.0.0",
   "type": "module",
-  "description": "Advanced Twitch Clip Player with intelligent shuffling - Created by IRLServer.com",
+  "description": "BRB Screen - Professional Twitch Clip Player for Streamers. Powered by IRLServer.com",
   "main": "src/main.js",
-  "homepage": "https://irlserver.com",
+  "homepage": "https://brbscreen.com",
   "repository": {
     "type": "git",
     "url": "https://github.com/irlserver/irl-clips"
@@ -18,15 +18,17 @@
     "vite": "^5.0.0"
   },
   "keywords": [
+    "brb",
     "twitch",
     "clips",
     "streaming",
     "video",
     "irlserver",
-    "shuffle",
-    "player"
+    "obs",
+    "brb-screen",
+    "streamer-tools"
   ],
   "author": "IRLServer.com - Thomas Lekanger <contact@irlserver.com>",
   "license": "CC-BY-4.0",
-  "attribution": "When using this software, you must credit IRLServer.com as the original creator and include a visible link to https://irlserver.com"
+  "attribution": "BRB Screen is powered by IRLServer.com. When using this software, credit IRLServer.com and link to https://irlserver.com"
 }
