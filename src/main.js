@@ -6,27 +6,21 @@ import { UIManager } from "./ui/ui-manager.js";
 import { URLGenerator } from "./ui/generator.js";
 
 // Display attribution information in console
-// Note: IRLServer.com branding appears prominently in the generator interface
-// but NOT in the actual clip player to keep the viewing experience clean
 console.log(
-  "%c🎬 IRLServer Clip Player",
-  "color: #667eea; font-size: 20px; font-weight: bold;"
+  "%c🎬 BRB Screen",
+  "color: #dc2626; font-size: 20px; font-weight: bold;"
 );
 console.log(
-  "%cCreated by IRLServer.com",
-  "color: #764ba2; font-size: 14px; font-weight: bold;"
+  "%cPowered by IRLServer.com",
+  "color: #f87171; font-size: 14px; font-weight: bold;"
 );
 console.log(
   "%c📋 License: CC BY 4.0 - Attribution Required",
   "color: #fbbf24; font-size: 12px;"
 );
 console.log(
-  "%c🔗 https://irlserver.com",
+  "%c🔗 https://brbscreen.com | https://irlserver.com",
   "color: #60a5fa; font-size: 12px; text-decoration: underline;"
-);
-console.log(
-  "%cWhen using this software, you must credit IRLServer.com as the original creator.",
-  "color: #6b7280; font-size: 11px;"
 );
 
 /**
@@ -67,17 +61,20 @@ class ClipPlayerApp {
   async initialize() {
     // Check if we have a channel name
     if (!this.channelName || this.channelName.trim() === "") {
-      console.log("🎬 No channel specified, showing URL generator...");
-      this.showGenerator();
+      console.log("🎬 No channel specified, showing landing page...");
+      this.showLandingPage();
       return;
     }
 
-    // We have a channel name, proceed with normal initialization
+    // We have a channel name, show player mode
+    this.showPlayer();
+
+    // Proceed with normal initialization
     this.config = this.loadConfiguration();
 
     try {
       console.log(
-        "🎬 Initializing IRLServer clip player for channel:",
+        "🎬 Initializing BRB Screen clip player for channel:",
         this.config.channelName
       );
 
@@ -197,37 +194,78 @@ class ClipPlayerApp {
   }
 
   /**
-   * Show the URL generator interface
+   * Show the landing page with modal generator
    */
-  showGenerator() {
-    // Hide all normal player elements
-    this.hidePlayerElements();
+  showLandingPage() {
+    // Show landing page, hide player mode
+    const landingPage = document.getElementById("landing-page");
+    const playerMode = document.getElementById("player-mode");
 
-    // Initialize and show the generator
+    if (landingPage) landingPage.style.display = "block";
+    if (playerMode) playerMode.style.display = "none";
+
+    // Initialize the generator in the modal
     this.urlGenerator = new URLGenerator();
     this.urlGenerator.initialize();
-    this.urlGenerator.show();
+
+    // Setup modal open/close handlers
+    this.setupModalHandlers();
   }
 
   /**
-   * Hide player elements when showing generator
+   * Setup modal open/close event handlers
    */
-  hidePlayerElements() {
-    const elementsToHide = [
-      "#loading-screen",
-      "#clip-player",
-      "#clip-info",
-      "#logo",
-      "#logo-text",
-      "#countdown-timer",
-    ];
+  setupModalHandlers() {
+    const modal = document.getElementById("generator-modal");
+    const openBtn = document.getElementById("open-generator-btn");
+    const closeBtn = document.getElementById("close-generator-btn");
+    const openBtns = document.querySelectorAll(".open-generator-btn");
 
-    elementsToHide.forEach((selector) => {
-      const element = document.querySelector(selector);
-      if (element) {
-        element.style.display = "none";
+    // Open modal
+    const openModal = () => {
+      if (modal) {
+        modal.style.display = "flex";
+        document.body.style.overflow = "hidden";
+      }
+    };
+
+    // Close modal
+    const closeModal = () => {
+      if (modal) {
+        modal.style.display = "none";
+        document.body.style.overflow = "";
+      }
+    };
+
+    // Attach event listeners
+    if (openBtn) openBtn.addEventListener("click", openModal);
+    if (closeBtn) closeBtn.addEventListener("click", closeModal);
+    openBtns.forEach((btn) => btn.addEventListener("click", openModal));
+
+    // Close on backdrop click
+    if (modal) {
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) closeModal();
+      });
+    }
+
+    // Close on escape key
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && modal && modal.style.display === "flex") {
+        closeModal();
       }
     });
+  }
+
+  /**
+   * Show the video player (hide landing page)
+   */
+  showPlayer() {
+    const landingPage = document.getElementById("landing-page");
+    const playerMode = document.getElementById("player-mode");
+
+    if (landingPage) landingPage.style.display = "none";
+    if (playerMode) playerMode.style.display = "block";
   }
 
   /**
