@@ -107,6 +107,19 @@
     </script>
 
     <link rel="stylesheet" href="/src/styles/main.css" />
+
+    <!-- Prevent landing page flash in OBS/player mode -->
+    <script>
+      (function() {
+        if (new URLSearchParams(window.location.search).has('channelName')) {
+          document.documentElement.classList.add('player-mode-active');
+        }
+      })();
+    </script>
+    <style>
+      html.player-mode-active #landing-page { display: none !important; }
+      html.player-mode-active #player-mode { display: block !important; }
+    </style>
   </head>
   <body>
     <!-- Landing Page -->
