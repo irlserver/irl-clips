@@ -169,10 +169,9 @@ export class URLGenerator {
       params.set("showLogo", "false");
     }
 
-    // Timer (convert minutes to showTimer flag)
-    const timerInput = document.getElementById("timer");
-    const timer = timerInput ? parseInt(timerInput.value) : 0;
-    if (timer > 0) {
+    // Show timer toggle
+    const showTimerInput = document.getElementById("showTimer");
+    if (showTimerInput && showTimerInput.checked) {
       params.set("showTimer", "true");
     }
 
