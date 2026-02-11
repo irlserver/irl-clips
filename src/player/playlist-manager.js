@@ -20,8 +20,20 @@ export class PlaylistManager {
   }
 
   /**
+   * Parse channel name string into an array of trimmed, non-empty channel names
+   * @param {string} channelName - Single channel or comma-separated channel names
+   * @returns {string[]} Array of channel names
+   */
+  parseChannelNames(channelName) {
+    return channelName
+      .split(",")
+      .map((ch) => ch.trim())
+      .filter((ch) => ch.length > 0);
+  }
+
+  /**
    * Load initial clips for immediate playback (fast loading)
-   * @param {string} channelName - Twitch channel name
+   * @param {string} channelName - Twitch channel name (comma-separated for multiple)
    * @param {number} days - Number of days to filter clips
    * @param {number} minViews - Minimum view count filter
    * @param {string} shuffleStrategy - Shuffling strategy to use
@@ -35,27 +47,48 @@ export class PlaylistManager {
   ) {
     try {
       this.shuffleStrategy = shuffleStrategy;
+      const channels = this.parseChannelNames(channelName);
 
       console.log(
-        `🚀 Fast loading diverse clips with multiple criteria for immediate playback...`
+        `🚀 Fast loading diverse clips for ${channels.length} channel(s): ${channels.join(", ")}...`
       );
 
-      // Fetch clips using multiple criteria for maximum randomness
-      const result = await fetchMultipleCriteriaClips(channelName, days);
-      let clips = result.clips;
+      // Fetch clips from all channels in parallel
+      const results = await Promise.all(
+        channels.map((ch) =>
+          fetchMultipleCriteriaClips(ch, days)
+            .then((result) => ({ channel: ch, ...result, success: true }))
+            .catch((error) => {
+              console.warn(`Failed to fetch clips for ${ch}:`, error.message);
+              return { channel: ch, clips: [], hasNextPage: false, endCursor: null, primaryFilter: null, success: false };
+            })
+        )
+      );
 
-      if (clips.length === 0) {
-        throw new Error(`No clips found for channel: ${channelName}`);
+      // Merge clips from all channels and deduplicate
+      const seenIds = new Set();
+      let clips = [];
+      for (const result of results) {
+        for (const clip of result.clips) {
+          if (!seenIds.has(clip.id)) {
+            seenIds.add(clip.id);
+            clips.push(clip);
+          }
+        }
       }
 
-      console.log(`Initial diverse batch: ${clips.length} clips`);
+      if (clips.length === 0) {
+        throw new Error(`No clips found for channel(s): ${channels.join(", ")}`);
+      }
+
+      console.log(`Initial diverse batch: ${clips.length} clips from ${channels.length} channel(s)`);
 
       // Apply filters to initial batch
       clips = this.applyFilters(clips, days, minViews);
 
       if (clips.length === 0) {
         throw new Error(
-          `No clips found matching criteria for channel: ${channelName}`
+          `No clips found matching criteria for channel(s): ${channels.join(", ")}`
         );
       }
 
@@ -67,14 +100,21 @@ export class PlaylistManager {
         `✨ Ready to play with ${this.playlist.length} clips! Loading more in background...`
       );
 
-      // Start background loading of remaining clips using pagination info from initial fetch
+      // Build pagination info per channel for background loading
+      const channelPagination = results
+        .filter((r) => r.success && r.hasNextPage && r.endCursor)
+        .map((r) => ({
+          channel: r.channel,
+          endCursor: r.endCursor,
+          hasNextPage: r.hasNextPage,
+          primaryFilter: r.primaryFilter,
+        }));
+
+      // Start background loading of remaining clips
       this.backgroundLoadingPromise = this.loadRemainingClips(
-        channelName,
+        channelPagination,
         days,
-        minViews,
-        result.endCursor,    // Use cursor from primary filter
-        result.hasNextPage,  // Use hasNextPage from primary filter
-        result.primaryFilter // Pass the primary filter for continued pagination
+        minViews
       );
 
       return;
@@ -85,39 +125,49 @@ export class PlaylistManager {
   }
 
   /**
-   * Load remaining clips in the background
-   * @param {string} channelName - Twitch channel name
+   * Load remaining clips in the background for all channels
+   * @param {Array<Object>} channelPagination - Array of {channel, endCursor, hasNextPage, primaryFilter}
    * @param {number} days - Number of days to filter clips
    * @param {number} minViews - Minimum view count filter
-   * @param {string} startCursor - Cursor from initial fetch
-   * @param {boolean} hasNextPage - Whether more pages exist
    * @returns {Promise<void>}
    */
   async loadRemainingClips(
-    channelName,
+    channelPagination,
     days,
-    minViews,
-    startCursor,
-    hasNextPage,
-    primaryFilter = null
+    minViews
   ) {
-    if (!hasNextPage || !startCursor) {
+    if (!channelPagination || channelPagination.length === 0) {
       console.log("✅ All clips already loaded");
       this.isLoadingComplete = true;
       return;
     }
 
     try {
-      console.log(`📦 Loading additional clips in background using ${primaryFilter || 'default'} filter...`);
-
-      // Use fetchDiverseClips for continued pagination with the same filter
-      const remainingClips = await fetchDiverseClips(
-        channelName,
-        this.maxClipsToFetch - this.playlist.length,
-        startCursor,
-        days,
-        primaryFilter  // Pass the specific filter to continue pagination correctly
+      const clipsPerChannel = Math.max(
+        100,
+        Math.floor((this.maxClipsToFetch - this.playlist.length) / channelPagination.length)
       );
+
+      console.log(`📦 Loading additional clips in background for ${channelPagination.length} channel(s)...`);
+
+      // Fetch remaining clips from all channels in parallel
+      const fetchResults = await Promise.all(
+        channelPagination.map(({ channel, endCursor, primaryFilter }) =>
+          fetchDiverseClips(
+            channel,
+            clipsPerChannel,
+            endCursor,
+            days,
+            primaryFilter
+          ).catch((error) => {
+            console.warn(`Background loading failed for ${channel}:`, error.message);
+            return [];
+          })
+        )
+      );
+
+      // Merge all results
+      const remainingClips = fetchResults.flat();
 
       if (remainingClips.length === 0) {
         console.log("✅ No additional clips found");
@@ -136,7 +186,7 @@ export class PlaylistManager {
         // Remove duplicates before merging
         const existingIds = new Set(this.playlist.map(clip => clip.id));
         const newClips = filteredClips.filter(clip => !existingIds.has(clip.id));
-        
+
         if (newClips.length > 0) {
           // Merge new clips into existing playlist (reshuffled)
           const allClips = [...this.playlist, ...newClips];

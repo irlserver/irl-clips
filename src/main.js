@@ -93,7 +93,9 @@ class ClipPlayerApp {
         "✅ Ready to play with",
         this.playlistManager.playlist.length,
         "clips for",
-        this.config.channelName,
+        this.config.channelName.includes(",")
+          ? this.config.channelName.split(",").map((ch) => ch.trim()).join(", ")
+          : this.config.channelName,
         "(loading more in background)"
       );
 
