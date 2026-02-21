@@ -30,5 +30,8 @@
   ],
   "author": "IRLServer.com - Thomas Lekanger <contact@irlserver.com>",
   "license": "CC-BY-4.0",
-  "attribution": "BRB Screen is powered by IRLServer.com. When using this software, credit IRLServer.com and link to https://irlserver.com"
+  "attribution": "BRB Screen is powered by IRLServer.com. When using this software, credit IRLServer.com and link to https://irlserver.com",
+  "dependencies": {
+    "@vercel/analytics": "^1.6.1"
+  }
 }
