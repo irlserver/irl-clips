@@ -39,7 +39,7 @@
     <!-- Preconnect for performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
     <!-- Structured Data - Organization -->
     <script type="application/ld+json">
@@ -133,7 +133,6 @@
           </a>
           <div class="nav-links">
             <a href="#features">Features</a>
-            <a href="#how-it-works">How It Works</a>
             <a href="#faq">FAQ</a>
             <a href="https://irlserver.com" target="_blank" rel="noopener" class="nav-link-highlight">IRLServer.com</a>
           </div>
@@ -147,43 +146,27 @@
 
       <!-- Hero Section -->
       <section class="hero-section">
+        <div class="ambient-glow"></div>
         <div class="hero-content">
-          <div class="hero-badge">
-            <span class="badge-dot"></span>
-            Powered by <a href="https://irlserver.com" target="_blank" rel="noopener">IRLServer.com</a>
-          </div>
           <h1 class="hero-title">
-            Keep Your Audience<br />
-            <span class="gradient-text">Entertained</span> During Breaks
+            Auto-Play Clips During <span class="text-red">Your Breaks</span>
           </h1>
           <p class="hero-subtitle">
-            BRB Screen automatically plays your best Twitch clips while you're away.
-            No more silent "be right back" screens. Free, instant setup, works with OBS.
+            BRB Screen plays your best Twitch clips while you're away.
+            Free, no account needed, works with OBS.
           </p>
           <div class="hero-cta">
             <button type="button" class="btn btn-primary" id="open-generator-btn">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
               Create Your BRB Screen
             </button>
-            <a href="#how-it-works" class="btn btn-secondary">
+            <a href="#features" class="btn btn-secondary">
               Learn More
             </a>
           </div>
-          <div class="hero-stats">
-            <div class="stat">
-              <strong>100%</strong>
-              <span>Free Forever</span>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat">
-              <strong>Instant</strong>
-              <span>No Account Needed</span>
-            </div>
-            <div class="stat-divider"></div>
-            <div class="stat">
-              <strong>OBS</strong>
-              <span>Browser Source Ready</span>
-            </div>
+          <div class="hero-pills">
+            <span class="hero-pill">Free Forever</span>
+            <span class="hero-pill">No Account Needed</span>
+            <span class="hero-pill">OBS Browser Source</span>
           </div>
         </div>
       </section>
@@ -192,90 +175,63 @@
       <section id="features" class="features-section">
         <div class="section-content">
           <div class="section-header">
-            <span class="section-eyebrow">Features</span>
-            <h2 class="section-title">Everything You Need for Better Breaks</h2>
-            <p class="section-subtitle">Built by streamers, for streamers. Every feature designed to keep your viewers engaged.</p>
+            <h2 class="section-title">Built for <span class="text-red">Streamers</span></h2>
           </div>
-          <div class="features-grid">
-            <div class="feature-card">
+          <div class="features-list">
+            <div class="feature-item">
               <div class="feature-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"></path><circle cx="12" cy="13" r="3"></circle></svg>
               </div>
-              <h3>Multi-Channel Support</h3>
-              <p>Play clips from your channel, friends, or any Twitch creator. Mix and match to create the perfect break content.</p>
+              <div>
+                <h3>Multi-Channel Support</h3>
+                <p>Play clips from your channel, friends, or any Twitch creator.</p>
+              </div>
             </div>
-            <div class="feature-card">
+            <div class="feature-item">
               <div class="feature-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
               </div>
-              <h3>Smart Shuffle</h3>
-              <p>Intelligent algorithm ensures variety. No repeated clips back-to-back, weighted by popularity and recency.</p>
+              <div>
+                <h3>Smart Shuffle</h3>
+                <p>No repeated clips back-to-back, weighted by popularity and recency.</p>
+              </div>
             </div>
-            <div class="feature-card">
+            <div class="feature-item">
               <div class="feature-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
               </div>
-              <h3>OBS Ready</h3>
-              <p>Works perfectly as a Browser Source. Copy your URL, paste into OBS, and you're live in seconds.</p>
+              <div>
+                <h3>OBS Ready</h3>
+                <p>Copy your URL, paste into OBS as a Browser Source, done.</p>
+              </div>
             </div>
-            <div class="feature-card">
+            <div class="feature-item">
               <div class="feature-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
               </div>
-              <h3>Fully Customizable</h3>
-              <p>Control volume, show/hide clip info, set countdown timers, add your logo. Make it match your brand.</p>
+              <div>
+                <h3>Fully Customizable</h3>
+                <p>Volume, clip info, countdown timers, logo display.</p>
+              </div>
             </div>
-            <div class="feature-card">
+            <div class="feature-item">
               <div class="feature-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
               </div>
-              <h3>No Account Required</h3>
-              <p>No sign-up, no login, no tracking. Generate your URL and start using it immediately. Your privacy matters.</p>
+              <div>
+                <h3>No Account Required</h3>
+                <p>No sign-up, no login, no tracking. Just generate a URL and go.</p>
+              </div>
             </div>
-            <div class="feature-card">
+            <div class="feature-item">
               <div class="feature-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
               </div>
-              <h3>Free Forever</h3>
-              <p>Completely free with no hidden costs. Powered by IRLServer.com as a gift to the streaming community.</p>
+              <div>
+                <h3>Free Forever</h3>
+                <p>No hidden costs. A gift to the streaming community from IRLServer.</p>
+              </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- How It Works Section -->
-      <section id="how-it-works" class="how-section">
-        <div class="section-content">
-          <div class="section-header">
-            <span class="section-eyebrow">Setup</span>
-            <h2 class="section-title">Ready in 3 Simple Steps</h2>
-            <p class="section-subtitle">From zero to BRB screen in under a minute. No technical knowledge required.</p>
-          </div>
-          <div class="steps-grid">
-            <div class="step-card">
-              <div class="step-number">1</div>
-              <h3>Configure Your Clips</h3>
-              <p>Enter your Twitch channel name (or multiple channels), adjust settings like volume and clip info display.</p>
-            </div>
-            <div class="step-connector">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            </div>
-            <div class="step-card">
-              <div class="step-number">2</div>
-              <h3>Copy Your URL</h3>
-              <p>Click "Copy URL" to get your personalized BRB Screen link with all your settings embedded.</p>
-            </div>
-            <div class="step-connector">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            </div>
-            <div class="step-card">
-              <div class="step-number">3</div>
-              <h3>Add to OBS</h3>
-              <p>Create a Browser Source in OBS, paste the URL, set to 1920x1080, and you're done! Switch scenes when on break.</p>
-            </div>
-          </div>
-          <div class="steps-cta">
-            <button type="button" class="btn btn-primary open-generator-btn">Get Started Now</button>
           </div>
         </div>
       </section>
@@ -433,8 +389,7 @@
       <section id="faq" class="faq-section">
         <div class="section-content">
           <div class="section-header">
-            <span class="section-eyebrow">FAQ</span>
-            <h2 class="section-title">Frequently Asked Questions</h2>
+            <h2 class="section-title"><span class="text-red">FAQ</span></h2>
           </div>
           <div class="faq-grid">
             <div class="faq-item">
@@ -470,8 +425,8 @@
         <div class="section-content">
           <div class="promo-card">
             <div class="promo-content">
-              <span class="section-eyebrow">From the makers of BRB Screen</span>
-              <h2 class="promo-title">Professional IRL Streaming Infrastructure</h2>
+              <h2 class="promo-title">Professional <span class="text-red">IRL Streaming</span> Infrastructure</h2>
+              <p class="promo-byline">From the makers of BRB Screen</p>
               <p class="promo-subtitle">
                 Take your IRL streams to the next level with IRLServer.com's global streaming endpoints.
                 Ultra-low latency, maximum reliability, and unlimited bandwidth.
@@ -567,7 +522,7 @@
             <div class="footer-column">
               <h5>Product</h5>
               <a href="#features">Features</a>
-              <a href="#how-it-works">How It Works</a>
+              <a href="#faq">FAQ</a>
               <a href="#generator">URL Generator</a>
             </div>
             <div class="footer-column">
