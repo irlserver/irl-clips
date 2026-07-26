@@ -46,7 +46,7 @@ The app instance is exposed as `window.clipPlayerApp` for debugging.
 
 ### Key URL Parameters
 
-`channelName` (required, comma-separated for multi-channel), `days` (default 900), `views` (min views, default 0), `shuffle` (smart|stratified|weighted|random), `volume` (0-1), `showLogo`, `logoFreq`, `showInfo`, `showTimer`.
+`channelName` (required, comma-separated for multi-channel), `days` (default 900), `views` (min views, default 0), `shuffle` (smart|stratified|weighted|random), `volume` (0-1), `showLogo`, `logoFreq`, `showInfo`, `infoScale` (overlay size multiplier, default 1), `showTimer`.
 
 ## Deployment
 

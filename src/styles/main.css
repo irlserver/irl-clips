@@ -626,6 +626,11 @@ img {
   color: var(--text-muted);
 }
 
+.form-field.is-disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
 /* Quick Add Streamers */
 .quick-add {
   display: flex;
@@ -670,13 +675,13 @@ img {
   gap: 16px;
 }
 
-.volume-control {
+.slider-control {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.volume-control input[type="range"] {
+.slider-control input[type="range"] {
   flex: 1;
   appearance: none;
   height: 6px;
@@ -685,7 +690,7 @@ img {
   cursor: pointer;
 }
 
-.volume-control input[type="range"]::-webkit-slider-thumb {
+.slider-control input[type="range"]::-webkit-slider-thumb {
   appearance: none;
   width: 16px;
   height: 16px;
@@ -695,7 +700,7 @@ img {
   box-shadow: 0 2px 8px rgba(220, 38, 38, 0.4);
 }
 
-.volume-value {
+.slider-value {
   min-width: 40px;
   font-size: 0.85rem;
   font-weight: 600;
@@ -1157,16 +1162,19 @@ img {
 }
 
 #clip-info {
+  /* Overridden at runtime from the infoScale URL param so streamers can size
+     the overlay to their canvas resolution (OBS sources are often downscaled). */
+  --info-scale: 1;
   position: absolute;
   bottom: 20px;
   left: 20px;
   background-color: rgba(0, 0, 0, 0.8);
   color: white;
-  padding: 15px;
-  border-radius: 8px;
-  font-size: 0.9rem;
+  padding: calc(15px * var(--info-scale));
+  border-radius: calc(8px * var(--info-scale));
+  font-size: calc(0.9rem * var(--info-scale));
   line-height: 1.4;
-  max-width: 400px;
+  max-width: min(calc(400px * var(--info-scale)), calc(100vw - 40px));
   z-index: 10;
   display: none;
   backdrop-filter: blur(10px);
@@ -1174,7 +1182,7 @@ img {
 }
 
 #clip-info div:first-child {
-  margin-bottom: 5px;
+  margin-bottom: calc(5px * var(--info-scale));
 }
 
 #logo-container {
@@ -1419,8 +1427,8 @@ img {
     left: 10px;
     right: 10px;
     max-width: none;
-    font-size: 0.8rem;
-    padding: 12px;
+    font-size: calc(0.8rem * var(--info-scale));
+    padding: calc(12px * var(--info-scale));
   }
 
   #countdown-timer {

@@ -103,6 +103,26 @@ export class URLGenerator {
       });
     }
 
+    // Clip info size slider display update
+    const infoScaleSlider = document.getElementById("infoScale");
+    const infoScaleDisplay = document.getElementById("infoScale-display");
+    if (infoScaleSlider && infoScaleDisplay) {
+      infoScaleSlider.addEventListener("input", (e) => {
+        infoScaleDisplay.textContent = e.target.value + "%";
+      });
+    }
+
+    // Clip info size only applies when the info overlay is shown
+    const showInfoToggle = document.getElementById("showInfo");
+    if (showInfoToggle && infoScaleSlider) {
+      const syncInfoScaleState = () => {
+        infoScaleSlider.disabled = !showInfoToggle.checked;
+        infoScaleSlider.closest(".form-field")?.classList.toggle("is-disabled", !showInfoToggle.checked);
+      };
+      showInfoToggle.addEventListener("change", syncInfoScaleState);
+      syncInfoScaleState();
+    }
+
     // Action buttons
     const copyBtn = document.getElementById("copy-btn");
     const launchBtn = document.getElementById("launch-btn");
@@ -161,6 +181,13 @@ export class URLGenerator {
     const showInfoInput = document.getElementById("showInfo");
     if (showInfoInput && !showInfoInput.checked) {
       params.set("showInfo", "false");
+    }
+
+    // Clip info scale (convert from percentage to multiplier)
+    const infoScaleInput = document.getElementById("infoScale");
+    const infoScale = infoScaleInput ? parseInt(infoScaleInput.value) / 100 : 1;
+    if (infoScale !== 1 && showInfoInput?.checked) {
+      params.set("infoScale", infoScale.toString());
     }
 
     // Show logo checkbox

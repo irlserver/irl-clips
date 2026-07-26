@@ -328,7 +328,7 @@
               <div class="settings-grid">
                 <div class="form-field">
                   <label for="volume">Volume</label>
-                  <div class="volume-control">
+                  <div class="slider-control">
                     <input
                       type="range"
                       id="volume"
@@ -337,8 +337,25 @@
                       max="100"
                       value="50"
                     />
-                    <span class="volume-value" id="volume-display">50%</span>
+                    <span class="slider-value" id="volume-display">50%</span>
                   </div>
+                </div>
+
+                <div class="form-field">
+                  <label for="infoScale">Clip Info Size</label>
+                  <div class="slider-control">
+                    <input
+                      type="range"
+                      id="infoScale"
+                      name="infoScale"
+                      min="50"
+                      max="250"
+                      step="5"
+                      value="100"
+                    />
+                    <span class="slider-value" id="infoScale-display">100%</span>
+                  </div>
+                  <span class="field-hint">Scales the clip info overlay</span>
                 </div>
 
               </div>

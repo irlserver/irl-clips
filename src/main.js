@@ -51,6 +51,7 @@ class ClipPlayerApp {
       showLogo: getQueryParam("showLogo", true),
       logoFreq: getQueryParam("logoFreq", 5), // Show logo every N clips
       showInfo: getQueryParam("showInfo", true),
+      infoScale: getQueryParam("infoScale", 1),
       showTimer: getQueryParam("showTimer", false),
     };
   }

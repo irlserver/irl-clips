@@ -67,6 +67,7 @@ Configure the player using URL parameters:
 | `volume` | number | `0.5` | Video volume (0.0 - 1.0) |
 | `showLogo` | boolean | `true` | Show channel logo |
 | `showInfo` | boolean | `true` | Show clip information |
+| `infoScale` | number | `1` | Size multiplier for the clip info overlay (0.5 - 3) |
 | `showTimer` | boolean | `false` | Show countdown timer |
 
 ### Shuffle Strategies

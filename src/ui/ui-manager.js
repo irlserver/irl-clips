@@ -29,6 +29,20 @@ export class UIManager {
     // Logo elements start hidden via CSS (visibility: hidden, opacity: 0)
     this.showElement("countdownTimer", config.showTimer);
     this.showElement("clipInfo", config.showInfo);
+    this.setClipInfoScale(config.infoScale);
+  }
+
+  /**
+   * Scale the clip info overlay
+   * @param {number} scale - Size multiplier (1 = default)
+   */
+  setClipInfoScale(scale) {
+    if (!this.elements.clipInfo) return;
+
+    const parsed = Number(scale);
+    const clamped = Number.isFinite(parsed) ? Math.min(Math.max(parsed, 0.5), 3) : 1;
+
+    this.elements.clipInfo.style.setProperty("--info-scale", clamped);
   }
 
   /**
