@@ -1,4 +1,4 @@
-const CLIENT_ID = "kimne78kx3ncx6brgo4mv6wki5h1ko";
+const CLIENT_ID = "kd1unb4b3q4t58fwlpcbzcbnm76a8fp";
 const GRAPHQL_ENDPOINT = "https://gql.twitch.tv/gql";
 const PERSISTED_QUERY_HASH =
 	"4f35f1ac933d76b1da008c806cd5546a7534dfaff83e033a422a81f24e5991b3";
