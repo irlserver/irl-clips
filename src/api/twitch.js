@@ -1,7 +1,7 @@
-const CLIENT_ID = "kd1unb4b3q4t58fwlpcbzcbnm76a8fp";
+const CLIENT_ID = "kimne78kx3ncx6brgo4mv6wki5h1ko";
 const GRAPHQL_ENDPOINT = "https://gql.twitch.tv/gql";
 const PERSISTED_QUERY_HASH =
-	"9c0a5b51612a41b06bfb93065deb6fd7bb7e011db2beb6e5e5d7588ae7f3ff4b";
+	"4f35f1ac933d76b1da008c806cd5546a7534dfaff83e033a422a81f24e5991b3";
 
 // New ClipsCards__User persisted query hash (more reliable)
 const CLIPS_CARDS_QUERY_HASH =
@@ -545,8 +545,9 @@ export async function getClipPlaybackUrl(clipSlug) {
 		// Use persisted query for better reliability
 		const data = [
 			{
-				operationName: "ClipsDownloadButton",
+				operationName: "VideoAccessToken_Clip",
 				variables: {
+					platform: "web",
 					slug: clipSlug,
 				},
 				extensions: {
