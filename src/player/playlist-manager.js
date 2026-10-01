@@ -271,20 +271,17 @@ export class PlaylistManager {
 				return;
 			}
 
-			const allClips = [...this.playlist, ...newClips];
-			const currentClip = this.playlist[this.currentIndex - 1];
-
-			this.playlist = smartShuffle(allClips, this.shuffleStrategy);
-
-			// Keep playback position by continuing after the clip we were just playing
-			if (currentClip) {
-				const currentClipIndex = this.playlist.findIndex(
-					(clip) => clip.id === currentClip.id,
-				);
-				if (currentClipIndex >= 0) {
-					this.currentIndex = currentClipIndex + 1;
-				}
-			}
+			// Only reshuffle what hasn't played yet, so clips already shown this
+			// cycle can't come back before the rest of the pool has had a turn
+			const played = this.playlist.slice(0, this.currentIndex);
+			const upcoming = [
+				...this.playlist.slice(this.currentIndex),
+				...newClips,
+			];
+			this.playlist = [
+				...played,
+				...smartShuffle(upcoming, this.shuffleStrategy),
+			];
 
 			console.log(
 				`✨ Expanded playlist to ${this.playlist.length} clips total (added ${newClips.length} new clips)`,

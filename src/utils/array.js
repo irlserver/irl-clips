@@ -34,16 +34,15 @@ export function stratifiedShuffle(clips) {
   // Shuffle each bucket individually
   const shuffledBuckets = buckets.map((bucket) => shuffle(bucket));
 
-  // Interleave clips from different buckets to ensure variety
+  // Interleave clips from different buckets to ensure variety. Each round takes
+  // one clip per bucket in random order; a fixed order would always start the
+  // playlist (and every 4th slot) with the most viewed quartile.
   const result = [];
   const maxBucketSize = Math.max(...shuffledBuckets.map((b) => b.length));
 
   for (let i = 0; i < maxBucketSize; i++) {
-    for (const bucket of shuffledBuckets) {
-      if (bucket[i]) {
-        result.push(bucket[i]);
-      }
-    }
+    const round = shuffledBuckets.map((bucket) => bucket[i]).filter(Boolean);
+    result.push(...shuffle(round));
   }
 
   console.log(
