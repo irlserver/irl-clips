@@ -4,6 +4,11 @@ import {
 	getClipPlaybackUrl,
 } from "../api/twitch.js";
 import { filterByDateRange, smartShuffle } from "../utils/array.js";
+import {
+	clipCacheKey,
+	loadCachedClips,
+	saveCachedClips,
+} from "../utils/clip-cache.js";
 
 /**
  * Playlist Manager class for handling clip playlists
@@ -14,6 +19,7 @@ export class PlaylistManager {
 		this.currentIndex = 0;
 		this.shuffleStrategy = "smart"; // Can be 'random', 'stratified', 'weighted', 'smart'
 		this.maxClipsToFetch = 400; // Fetch more clips for better variety
+		this.minInitialClips = 50;
 		this.isLoadingComplete = false;
 		this.backgroundLoadingPromise = null;
 	}
@@ -31,7 +37,9 @@ export class PlaylistManager {
 	}
 
 	/**
-	 * Load initial clips for immediate playback (fast loading)
+	 * Load initial clips for immediate playback. A cached clip list starts
+	 * playing right away and gets refreshed in the background; otherwise
+	 * playback waits for a fresh initial pool.
 	 * @param {string} channelName - Twitch channel name (comma-separated for multiple)
 	 * @param {number} days - Number of days to filter clips
 	 * @param {number} minViews - Minimum view count filter
@@ -47,57 +55,34 @@ export class PlaylistManager {
 		try {
 			this.shuffleStrategy = shuffleStrategy;
 			const channels = this.parseChannelNames(channelName);
+			const cacheKey = clipCacheKey(channels, days, minViews);
 
-			console.log(
-				`🚀 Fast loading diverse clips for ${channels.length} channel(s): ${channels.join(", ")}...`,
+			// Filters are reapplied because the date window has moved since caching
+			const cached = this.applyFilters(
+				loadCachedClips(cacheKey),
+				days,
+				minViews,
 			);
-
-			// Fetch clips from all channels in parallel
-			const results = await Promise.all(
-				channels.map((ch) =>
-					fetchMultipleCriteriaClips(ch, days)
-						.then((result) => ({ channel: ch, ...result, success: true }))
-						.catch((error) => {
-							console.warn(`Failed to fetch clips for ${ch}:`, error.message);
-							return {
-								channel: ch,
-								clips: [],
-								hasNextPage: false,
-								endCursor: null,
-								primaryFilter: null,
-								success: false,
-							};
-						}),
-				),
-			);
-
-			// Merge clips from all channels and deduplicate
-			const seenIds = new Set();
-			let clips = [];
-			for (const result of results) {
-				for (const clip of result.clips) {
-					if (!seenIds.has(clip.id)) {
-						seenIds.add(clip.id);
-						clips.push(clip);
-					}
-				}
-			}
-
-			console.log(
-				`Initial diverse batch: ${clips.length} clips from ${channels.length} channel(s)`,
-			);
-
-			// Apply filters to initial batch
-			clips = this.applyFilters(clips, days, minViews);
-
-			if (clips.length === 0) {
-				clips = await this.searchForMatchingClips(
-					results,
-					seenIds,
+			if (cached.length > 0) {
+				console.log(
+					`⚡ Playing ${cached.length} cached clips, refreshing in background...`,
+				);
+				this.playlist = smartShuffle(cached, this.shuffleStrategy);
+				this.currentIndex = 0;
+				this.backgroundLoadingPromise = this.refreshClips(
+					channels,
 					days,
 					minViews,
+					cacheKey,
 				);
+				return;
 			}
+
+			const { clips, results, seenIds } = await this.fetchInitialPool(
+				channels,
+				days,
+				minViews,
+			);
 
 			if (clips.length === 0) {
 				throw new Error(
@@ -105,7 +90,6 @@ export class PlaylistManager {
 				);
 			}
 
-			// Apply initial shuffling
 			this.playlist = smartShuffle(clips, this.shuffleStrategy);
 			this.currentIndex = 0;
 
@@ -118,15 +102,77 @@ export class PlaylistManager {
 				seenIds,
 				days,
 				minViews,
+				cacheKey,
 			);
-
-			return;
 		} catch (error) {
 			console.error("Failed to load initial clips:", error);
 			throw error;
 		}
 	}
 
+	/**
+	 * Fetch the first batch for every channel and page on until it holds
+	 * minInitialClips matching clips
+	 * @param {string[]} channels - Channel names
+	 * @param {number} days - Number of days to filter clips
+	 * @param {number} minViews - Minimum view count filter
+	 * @returns {Promise<{clips: Array, results: Array<Object>, seenIds: Set<string>}>}
+	 *   Matching clips plus the pagination state needed to keep paging
+	 */
+	async fetchInitialPool(channels, days, minViews) {
+		console.log(
+			`🚀 Fast loading diverse clips for ${channels.length} channel(s): ${channels.join(", ")}...`,
+		);
+
+		const results = await Promise.all(
+			channels.map((ch) =>
+				fetchMultipleCriteriaClips(ch, days)
+					.then((result) => ({ channel: ch, ...result, success: true }))
+					.catch((error) => {
+						console.warn(`Failed to fetch clips for ${ch}:`, error.message);
+						return {
+							channel: ch,
+							clips: [],
+							hasNextPage: false,
+							endCursor: null,
+							primaryFilter: null,
+							success: false,
+						};
+					}),
+			),
+		);
+
+		const seenIds = new Set();
+		const batch = [];
+		for (const result of results) {
+			for (const clip of result.clips) {
+				if (!seenIds.has(clip.id)) {
+					seenIds.add(clip.id);
+					batch.push(clip);
+				}
+			}
+		}
+
+		console.log(
+			`Initial diverse batch: ${batch.length} clips from ${channels.length} channel(s)`,
+		);
+
+		const clips = this.applyFilters(batch, days, minViews);
+
+		if (clips.length < this.minInitialClips) {
+			clips.push(
+				...(await this.fillInitialPool(
+					results,
+					seenIds,
+					days,
+					minViews,
+					clips.length,
+				)),
+			);
+		}
+
+		return { clips, results, seenIds };
+	}
 
 	/**
 	 * Fetch the next page for every channel that still has one.
@@ -192,101 +238,113 @@ export class PlaylistManager {
 	}
 
 	/**
-	 * Page further into each channel's clips until some pass the filters.
-	 * Twitch only offers LAST_DAY/LAST_WEEK/LAST_MONTH/ALL_TIME, and ALL_TIME is
-	 * sorted by views, so for ranges like 250 days the first pages can be all
-	 * older, more popular clips.
+	 * Page further into each channel's clips until the initial pool holds
+	 * minInitialClips matching clips. Twitch only offers LAST_DAY/LAST_WEEK/
+	 * LAST_MONTH/ALL_TIME sorted by views, so for ranges like 250 days the first
+	 * matches are always the most viewed clips in range. Starting playback on
+	 * that handful would open every session with the same few clips.
 	 * @param {Array<Object>} results - Per-channel results with pagination info
 	 * @param {Set<string>} seenIds - Clip IDs already fetched
 	 * @param {number} days - Number of days to filter clips
 	 * @param {number} minViews - Minimum view count filter
-	 * @returns {Promise<Array>} Filtered clips (empty if none found within the page limit)
+	 * @param {number} alreadyFound - Matching clips the initial batch already has
+	 * @returns {Promise<Array>} Additional filtered clips (may fall short if the channels or the page limit run out)
 	 */
-	async searchForMatchingClips(results, seenIds, days, minViews) {
-		const maxPages = 10;
+	async fillInitialPool(results, seenIds, days, minViews, alreadyFound) {
+		// Caps the loading screen on channels with huge archives (~0.6s per page)
+		const maxPages = 20;
+		const found = [];
 
-		for (let page = 1; page <= maxPages && this.hasMorePages(results); page++) {
+		for (
+			let page = 1;
+			page <= maxPages &&
+			alreadyFound + found.length < this.minInitialClips &&
+			this.hasMorePages(results);
+			page++
+		) {
 			console.log(
-				`🔎 No clips matched filters yet, searching page ${page + 1}...`,
+				`🔎 ${alreadyFound + found.length}/${this.minInitialClips} clips match filters, searching page ${page + 1}...`,
 			);
 
-			const matching = await this.fetchNextPages(
+			found.push(
+				...(await this.fetchNextPages(results, seenIds, days, minViews)),
+			);
+		}
+
+		return found;
+	}
+
+	/**
+	 * Keep paging every channel until the pool holds maxClipsToFetch matching
+	 * clips or the channels run out of pages. The cap counts clips that pass the
+	 * filters, so narrow date ranges on channels with many older popular clips
+	 * still fill up.
+	 * @param {Array<Object>} results - Per-channel results with pagination info
+	 * @param {Set<string>} seenIds - Clip IDs already fetched
+	 * @param {number} days - Number of days to filter clips
+	 * @param {number} minViews - Minimum view count filter
+	 * @param {number} alreadyFound - Matching clips the pool already has
+	 * @returns {Promise<Array>} Additional filtered clips
+	 */
+	async fetchRemainingClips(results, seenIds, days, minViews, alreadyFound) {
+		// Safety net against paging forever through channels with huge clip archives
+		const maxPages = 50;
+		const newClips = [];
+		let page = 0;
+
+		while (
+			page < maxPages &&
+			alreadyFound + newClips.length < this.maxClipsToFetch &&
+			this.hasMorePages(results)
+		) {
+			page++;
+			newClips.push(
+				...(await this.fetchNextPages(results, seenIds, days, minViews)),
+			);
+
+			if (this.hasMorePages(results)) {
+				await new Promise((resolve) => setTimeout(resolve, 100));
+			}
+		}
+
+		console.log(
+			`Background fetch: ${newClips.length} matching clips across ${page} page(s)`,
+		);
+		return newClips;
+	}
+
+	/**
+	 * Grow the playlist that started from a freshly fetched initial pool
+	 * @param {Array<Object>} results - Per-channel results with pagination info
+	 * @param {Set<string>} seenIds - Clip IDs already fetched
+	 * @param {number} days - Number of days to filter clips
+	 * @param {number} minViews - Minimum view count filter
+	 * @param {string} cacheKey - Key to cache the complete pool under
+	 * @returns {Promise<void>}
+	 */
+	async loadRemainingClips(results, seenIds, days, minViews, cacheKey) {
+		try {
+			console.log("📦 Loading additional clips in background...");
+
+			const newClips = await this.fetchRemainingClips(
 				results,
 				seenIds,
 				days,
 				minViews,
+				this.playlist.length,
 			);
-			if (matching.length > 0) return matching;
-		}
 
-		return [];
-	}
-
-	/**
-	 * Keep paging every channel in the background until the playlist holds
-	 * maxClipsToFetch matching clips or the channels run out of pages.
-	 * The cap counts clips that pass the filters, so narrow date ranges on
-	 * channels with many older popular clips still fill up.
-	 * @param {Array<Object>} results - Per-channel results with pagination info
-	 * @param {Set<string>} seenIds - Clip IDs already fetched
-	 * @param {number} days - Number of days to filter clips
-	 * @param {number} minViews - Minimum view count filter
-	 * @returns {Promise<void>}
-	 */
-	async loadRemainingClips(results, seenIds, days, minViews) {
-		// Safety net against paging forever through channels with huge clip archives
-		const maxPages = 50;
-
-		try {
-			const newClips = [];
-			let page = 0;
-
-			console.log("📦 Loading additional clips in background...");
-
-			while (
-				page < maxPages &&
-				this.playlist.length + newClips.length < this.maxClipsToFetch &&
-				this.hasMorePages(results)
-			) {
-				page++;
-				const matching = await this.fetchNextPages(
-					results,
-					seenIds,
-					days,
-					minViews,
+			if (newClips.length > 0) {
+				this.replaceUpcoming([...this.playlist, ...newClips]);
+				console.log(
+					`✨ Expanded playlist to ${this.playlist.length} clips total (added ${newClips.length} new clips)`,
 				);
-				newClips.push(...matching);
-
-				if (this.hasMorePages(results)) {
-					await new Promise((resolve) => setTimeout(resolve, 100));
-				}
-			}
-
-			console.log(
-				`Background fetch: ${newClips.length} matching clips across ${page} page(s)`,
-			);
-
-			if (newClips.length === 0) {
+				this.logPlaylistStats();
+			} else {
 				console.log("✅ No additional clips found");
-				return;
 			}
 
-			// Only reshuffle what hasn't played yet, so clips already shown this
-			// cycle can't come back before the rest of the pool has had a turn
-			const played = this.playlist.slice(0, this.currentIndex);
-			const upcoming = [
-				...this.playlist.slice(this.currentIndex),
-				...newClips,
-			];
-			this.playlist = [
-				...played,
-				...smartShuffle(upcoming, this.shuffleStrategy),
-			];
-
-			console.log(
-				`✨ Expanded playlist to ${this.playlist.length} clips total (added ${newClips.length} new clips)`,
-			);
-			this.logPlaylistStats();
+			saveCachedClips(cacheKey, this.playlist);
 		} catch (error) {
 			console.error("Background loading failed:", error);
 		} finally {
@@ -294,6 +352,67 @@ export class PlaylistManager {
 		}
 	}
 
+	/**
+	 * Refetch the full pool while a cached playlist plays, so new clips show up
+	 * and deleted ones drop out
+	 * @param {string[]} channels - Channel names
+	 * @param {number} days - Number of days to filter clips
+	 * @param {number} minViews - Minimum view count filter
+	 * @param {string} cacheKey - Key to cache the fresh pool under
+	 * @returns {Promise<void>}
+	 */
+	async refreshClips(channels, days, minViews, cacheKey) {
+		try {
+			const { clips, results, seenIds } = await this.fetchInitialPool(
+				channels,
+				days,
+				minViews,
+			);
+			const remaining = await this.fetchRemainingClips(
+				results,
+				seenIds,
+				days,
+				minViews,
+				clips.length,
+			);
+			const fresh = [...clips, ...remaining];
+
+			// Nothing back usually means Twitch failed, so keep playing the cache
+			if (fresh.length === 0) {
+				console.warn("Refresh returned no clips, keeping cached playlist");
+				return;
+			}
+
+			this.replaceUpcoming(fresh);
+			saveCachedClips(cacheKey, fresh);
+
+			console.log(
+				`✨ Refreshed playlist from Twitch: ${fresh.length} clips in pool`,
+			);
+			this.logPlaylistStats();
+		} catch (error) {
+			console.error("Background refresh failed:", error);
+		} finally {
+			this.isLoadingComplete = true;
+		}
+	}
+
+	/**
+	 * Replace everything after the current position with a shuffle of the given
+	 * pool. Clips already played this cycle are kept out, so they can't come
+	 * back before the rest of the pool has had a turn.
+	 * @param {Array} pool - All clips that should be in the playlist
+	 */
+	replaceUpcoming(pool) {
+		const played = this.playlist.slice(0, this.currentIndex);
+		const playedIds = new Set(played.map((clip) => clip.id));
+		const upcoming = pool.filter((clip) => !playedIds.has(clip.id));
+
+		this.playlist = [
+			...played,
+			...smartShuffle(upcoming, this.shuffleStrategy),
+		];
+	}
 
 	/**
 	 * Apply date and view filters to clips

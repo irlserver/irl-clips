@@ -32,7 +32,7 @@ The app instance is exposed as `window.clipPlayerApp` for debugging.
 
 - **`src/api/twitch.js`** — Twitch GraphQL integration using persisted queries (no auth needed). Client-ID is hardcoded. `fetchMultipleCriteriaClips` fetches up to 4 time filters in parallel for the initial batch, falling back to a single `fetchClipsCards` call. Twitch only offers `LAST_DAY`/`LAST_WEEK`/`LAST_MONTH`/`ALL_TIME` filters sorted by views, so the `days` range is enforced client side. Clip playback URLs require per-clip signature/token fetched via `getClipPlaybackUrl`.
 
-- **`src/player/playlist-manager.js`** — Two-phase loading: fast initial batch (~100 clips) for immediate playback (paging further if nothing matches the filters yet), then background paging until `maxClipsToFetch` matching clips are loaded or the channels run out. Handles multi-channel support (comma-separated names), deduplication, filtering by date range/view count, and shuffle strategy selection.
+- **`src/player/playlist-manager.js`** — Two-phase loading: an initial pool of at least `minInitialClips` (50) matching clips before playback starts, then background paging until `maxClipsToFetch` matching clips are loaded or the channels run out. The minimum exists because Twitch sorts by views, so a tiny first pool would open every session with the same top clips. When a cached clip list exists, playback starts from it instantly and the full pool is refetched in the background. Handles multi-channel support (comma-separated names), deduplication, filtering by date range/view count, and shuffle strategy selection.
 
 - **`src/player/video-player.js`** — HTML5 video wrapper with preloading system. Uses a hidden `clip-preloader` element to buffer the next clip for seamless transitions. Includes retry logic, countdown timer, and automatic advancement on clip end.
 
@@ -41,6 +41,8 @@ The app instance is exposed as `window.clipPlayerApp` for debugging.
 - **`src/ui/generator.js`** — Landing page form that builds player URLs from user-selected options. Includes popular streamer quick-buttons and copy/test functionality.
 
 - **`src/utils/array.js`** — Four shuffle algorithms: Fisher-Yates (`shuffle`), `stratifiedShuffle` (view count quartiles), `weightedShuffle` (diversity factor 0.3), `smartShuffle` (auto-selects based on clip count: >200→stratified, >50→weighted, else random).
+
+- **`src/utils/clip-cache.js`**: caches each channel/days/views clip pool in `localStorage` for 7 days. Every storage call is guarded, since browser sources can block storage.
 
 - **`src/utils/url.js`** — URL parameter parsing with automatic type coercion (string booleans → bool, numeric strings → float).
 
