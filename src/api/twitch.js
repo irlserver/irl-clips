@@ -149,7 +149,7 @@ export async function fetchClipsCards(
 				thumbnailURL: clip.thumbnailURL,
 				createdAt: clip.createdAt,
 				durationSeconds: clip.durationSeconds,
-				url: `https://www.twitch.tv/${channelName}/clip/${clip.slug}`,
+				url: clip.url || `https://www.twitch.tv/${channelName}/clip/${clip.slug}`,
 				curator: clip.curator
 					? {
 							displayName: clip.curator.displayName || clip.curator.login,
@@ -158,8 +158,11 @@ export async function fetchClipsCards(
 					: null,
 				game: clip.game ? { name: clip.game.name } : null,
 				broadcaster: {
-					displayName: channelName,
-					login: channelName,
+					displayName:
+						clip.broadcaster?.displayName ||
+						clip.broadcaster?.login ||
+						channelName,
+					login: clip.broadcaster?.login || channelName,
 				},
 			};
 		});
@@ -373,164 +376,6 @@ export async function fetchMultipleCriteriaClips(channelName, days = 900) {
 				primaryFilter: primaryFilter,
 			};
 		}
-	}
-}
-
-/**
- * Fetch a diverse set of clips using the ClipsCards method with pagination
- * @param {string} channelName - Twitch channel name
- * @param {number} totalClips - Total number of clips to attempt to fetch
- * @param {string} startCursor - Starting cursor for pagination (optional)
- * @param {number} days - Number of days to consider for filter selection
- * @param {string} specificFilter - Specific filter to use (overrides days-based filter)
- * @returns {Promise<Array>} Array of clip objects
- */
-export async function fetchDiverseClips(
-	channelName,
-	totalClips = 300,
-	startCursor = null,
-	days = 900,
-	specificFilter = null,
-) {
-	console.log(
-		`Fetching diverse set of clips for ${channelName} using ClipsCards${
-			startCursor ? " (continuing from cursor)" : ""
-		}...`,
-	);
-
-	try {
-		const allClips = [];
-		let cursor = startCursor;
-		let requestCount = 0;
-		const maxRequests = Math.ceil(totalClips / 100); // Limit API calls
-
-		// Use specific filter if provided (for cursor continuation), otherwise determine from days
-		const filter = specificFilter || getDynamicFilter(days);
-
-		console.log(
-			`Using filter: ${filter}${cursor ? ` with initial cursor: ${cursor.substring(0, 10)}...` : ""}`,
-		);
-
-		// Fetch multiple pages to get beyond just the top clips
-		while (allClips.length < totalClips && requestCount < maxRequests) {
-			console.log(
-				`Request ${requestCount + 1}: Using cursor: ${cursor ? cursor.substring(0, 10) + "..." : "null"}`,
-			);
-
-			const result = await fetchClipsCards(channelName, 100, filter, cursor);
-
-			if (result.clips.length === 0) {
-				console.log(
-					`No clips returned on request ${requestCount + 1}, breaking`,
-				);
-				break;
-			}
-
-			allClips.push(...result.clips);
-			requestCount++;
-
-			console.log(
-				`Request ${requestCount} completed: ${result.clips.length} clips, hasNextPage: ${result.hasNextPage}, newCursor: ${result.endCursor ? result.endCursor.substring(0, 10) + "..." : "null"}`,
-			);
-
-			if (!result.hasNextPage || !result.endCursor) {
-				console.log(
-					`No more pages available for ${filter} (hasNextPage: ${result.hasNextPage}, endCursor: ${result.endCursor ? "exists" : "null"})`,
-				);
-				break;
-			}
-
-			// CRITICAL: Update cursor for next iteration
-			const previousCursor = cursor;
-			cursor = result.endCursor;
-
-			// Verify cursor actually changed
-			if (previousCursor && cursor === previousCursor) {
-				console.error(
-					`🚨 CURSOR DID NOT CHANGE! Previous: ${previousCursor.substring(0, 10)}..., New: ${cursor.substring(0, 10)}...`,
-				);
-				break; // Prevent infinite loop
-			}
-
-			// Small delay between requests to be respectful
-			if (requestCount < maxRequests) {
-				await new Promise((resolve) => setTimeout(resolve, 100));
-			}
-		}
-
-		console.log(
-			`Fetched ${allClips.length} clips across ${requestCount} ClipsCards API calls (${filter})`,
-		);
-
-		// If we need more clips and didn't get enough, try ALL_TIME as well (but only if not already using it and no cursor was provided)
-		if (allClips.length < totalClips && filter !== "ALL_TIME" && !startCursor) {
-			console.log("Getting additional clips from ALL_TIME...");
-			try {
-				let additionalCursor = null;
-				let additionalRequests = 0;
-				const maxAdditionalRequests = Math.ceil(
-					(totalClips - allClips.length) / 100,
-				);
-				const seenIds = new Set(allClips.map((clip) => clip.id));
-
-				while (
-					allClips.length < totalClips &&
-					additionalRequests < maxAdditionalRequests
-				) {
-					const additionalResult = await fetchClipsCards(
-						channelName,
-						100,
-						"ALL_TIME",
-						additionalCursor,
-					);
-
-					if (additionalResult.clips.length === 0) break;
-
-					// Only add clips we haven't seen before
-					const newClips = additionalResult.clips.filter(
-						(clip) => !seenIds.has(clip.id),
-					);
-					newClips.forEach((clip) => seenIds.add(clip.id));
-					allClips.push(...newClips);
-					additionalRequests++;
-
-					if (!additionalResult.hasNextPage || !additionalResult.endCursor)
-						break;
-					additionalCursor = additionalResult.endCursor;
-
-					if (additionalRequests < maxAdditionalRequests) {
-						await new Promise((resolve) => setTimeout(resolve, 100));
-					}
-				}
-
-				console.log(
-					`Added ${newClips?.length || 0} additional unique clips from ALL_TIME`,
-				);
-			} catch (error) {
-				console.warn("Failed to get additional ALL_TIME clips:", error.message);
-			}
-		}
-
-		return allClips;
-	} catch (error) {
-		console.error("Error fetching diverse clips with ClipsCards:", error);
-		console.log("Trying fallback to ALL_TIME...");
-
-		// Fallback to ALL_TIME (only if we weren't already using a cursor)
-		if (!startCursor) {
-			try {
-				const fallbackResult = await fetchClipsCards(
-					channelName,
-					100,
-					"ALL_TIME",
-				);
-				return fallbackResult.clips;
-			} catch (fallbackError) {
-				console.error("All ClipsCards fetches failed:", fallbackError);
-			}
-		}
-
-		return []; // Return empty array to prevent total failure
 	}
 }
 
