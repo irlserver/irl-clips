@@ -8,20 +8,19 @@ const CLIPS_CARDS_QUERY_HASH =
 	"5e28057f6a6bb95f25474447baf2eea1609ba987dc819b1a537fb0f9e08309bd";
 
 /**
- * Convert days parameter to appropriate filter value
- * @param {number} days - Number of days
- * @returns {string} Filter string for the API
+ * Build the createdAt window for the last `days` days.
+ * Twitch stops every clip listing at ~1100 clips sorted by views, so without a
+ * window a range like 250 days only sees clips popular enough to rank in the
+ * channel's all time top 1100.
+ * @param {number} days - Number of days to look back
+ * @returns {{startAt: string, endAt: string}|null} Window, or null for no limit
  */
-function getDynamicFilter(days) {
-	if (days <= 1) {
-		return "LAST_DAY";
-	} else if (days <= 7) {
-		return "LAST_WEEK";
-	} else if (days <= 30) {
-		return "LAST_MONTH";
-	} else {
-		return "ALL_TIME";
-	}
+export function clipDateRange(days) {
+	if (!days || days <= 0) return null;
+
+	const endAt = new Date();
+	const startAt = new Date(endAt.getTime() - days * 24 * 60 * 60 * 1000);
+	return { startAt: startAt.toISOString(), endAt: endAt.toISOString() };
 }
 
 /**
@@ -30,6 +29,7 @@ function getDynamicFilter(days) {
  * @param {number} limit - Number of clips to fetch (max 100 per request)
  * @param {string} filter - Time filter (LAST_DAY, LAST_WEEK, LAST_MONTH, ALL_TIME)
  * @param {string} cursor - Pagination cursor (optional)
+ * @param {{startAt: string, endAt: string}|null} range - Only return clips created in this window (optional)
  * @returns {Promise<Object>} Object containing clips array and pagination info
  */
 export async function fetchClipsCards(
@@ -37,6 +37,7 @@ export async function fetchClipsCards(
 	limit = 100,
 	filter = "ALL_TIME",
 	cursor = null,
+	range = null,
 ) {
 	console.log(
 		`Fetching ${limit} clips for ${channelName} using ClipsCards (${filter})${
@@ -51,7 +52,9 @@ export async function fetchClipsCards(
 			limit: Math.min(limit, 100), // Ensure we don't exceed GraphQL limit
 			criteria: {
 				filter: filter,
-				shouldFilterByDiscoverySetting: false
+				shouldFilterByDiscoverySetting: false,
+				// Not used by Twitch's own site, but the criteria input accepts it
+				...(range && { startAt: range.startAt, endAt: range.endAt }),
 			},
 		};
 
@@ -94,6 +97,12 @@ export async function fetchClipsCards(
 		// Debug: Log errors if any
 		if (data.errors) {
 			console.error(`❌ GraphQL errors:`, JSON.stringify(data.errors, null, 2));
+
+			// A failed page must not look like the end of the list, or callers
+			// stop paging and treat a partial pool as complete
+			if (!data.data?.user?.clips) {
+				throw new Error(`GraphQL error: ${data.errors[0]?.message}`);
+			}
 		}
 
 		if (!data.data?.user) {
@@ -223,159 +232,6 @@ export async function fetchClipsCards(
 			error,
 		);
 		throw error;
-	}
-}
-
-/**
- * Fetch clips with multiple simultaneous requests using the more reliable ClipsCards method
- * @param {string} channelName - Twitch channel name
- * @param {number} days - Number of days to consider for filter selection
- * @returns {Promise<Object>} Object containing clips array and pagination info for the primary filter
- */
-export async function fetchMultipleCriteriaClips(channelName, days = 900) {
-	console.log(
-		`Fetching clips with multiple filters using ClipsCards for ${channelName} (${days} days)...`,
-	);
-
-	// Get the primary filter based on days parameter
-	const primaryFilter = getDynamicFilter(days);
-
-	// Define different filters to try for variety
-	const filters = [
-		primaryFilter, // Primary filter based on days parameter
-		"ALL_TIME", // Always include all-time clips for variety
-		"LAST_WEEK", // Recent popular clips
-		"LAST_MONTH", // Monthly clips
-	];
-
-	// Remove duplicates while preserving order
-	const uniqueFilters = [...new Set(filters)];
-	let primaryFilterPagination = null;
-
-	try {
-		// Execute all fetches simultaneously using ClipsCards
-		const fetchPromises = uniqueFilters.map((filter) =>
-			fetchClipsCards(channelName, 100, filter)
-				.then((result) => ({
-					clips: result.clips,
-					filter,
-					success: true,
-					hasNextPage: result.hasNextPage,
-					endCursor: result.endCursor,
-				}))
-				.catch((error) => {
-					console.warn(`Failed ClipsCards fetch for ${filter}:`, error.message);
-					return {
-						clips: [],
-						filter,
-						success: false,
-						hasNextPage: false,
-						endCursor: null,
-					};
-				}),
-		);
-
-		const results = await Promise.all(fetchPromises);
-
-		// Combine all clips and remove duplicates
-		const allClips = [];
-		const seenIds = new Set();
-
-		results.forEach(({ clips, filter, success, hasNextPage, endCursor }) => {
-			console.log(`${filter}: ${clips.length} clips ${success ? "✓" : "✗"}`);
-
-			// Store pagination info for the primary filter for background loading
-			if (filter === primaryFilter && success) {
-				primaryFilterPagination = {
-					hasNextPage,
-					endCursor,
-					filter: primaryFilter,
-				};
-			}
-
-			clips.forEach((clip) => {
-				if (!seenIds.has(clip.id)) {
-					seenIds.add(clip.id);
-					allClips.push(clip);
-				}
-			});
-		});
-
-		console.log(
-			`Combined ${allClips.length} unique clips from ${uniqueFilters.length} ClipsCards fetches`,
-		);
-
-		// If we didn't get many clips, try a fallback with pagination
-		if (allClips.length < 20) {
-			console.log("Low clip count, trying paginated fallback to ALL_TIME...");
-			try {
-				let cursor = null;
-				let pageCount = 0;
-				const maxPages = 3;
-				const currentSeenIds = new Set(allClips.map((clip) => clip.id));
-
-				while (pageCount < maxPages) {
-					const fallbackResult = await fetchClipsCards(
-						channelName,
-						100,
-						"ALL_TIME",
-						cursor,
-					);
-					const newClips = fallbackResult.clips.filter(
-						(clip) => !currentSeenIds.has(clip.id),
-					);
-
-					newClips.forEach((clip) => {
-						currentSeenIds.add(clip.id);
-						allClips.push(clip);
-					});
-
-					pageCount++;
-
-					if (!fallbackResult.hasNextPage || !fallbackResult.endCursor) break;
-					cursor = fallbackResult.endCursor;
-
-					if (pageCount < maxPages) {
-						await new Promise((resolve) => setTimeout(resolve, 100));
-					}
-				}
-
-				console.log(
-					`Added ${newClips?.length || 0} additional clips from paginated fallback`,
-				);
-			} catch (fallbackError) {
-				console.warn("Fallback fetch failed:", fallbackError.message);
-			}
-		}
-
-		return {
-			clips: allClips,
-			hasNextPage: primaryFilterPagination?.hasNextPage || false,
-			endCursor: primaryFilterPagination?.endCursor || null,
-			primaryFilter: primaryFilter,
-		};
-	} catch (error) {
-		console.error("Error in ClipsCards multiple criteria fetch:", error);
-		console.log("Falling back to single ALL_TIME ClipsCards fetch...");
-
-		// Final fallback to single fetch
-		try {
-			const fallback = await fetchClipsCards(channelName, 100, "ALL_TIME");
-			return {
-				clips: fallback.clips,
-				hasNextPage: fallback.hasNextPage,
-				endCursor: fallback.endCursor,
-				primaryFilter: "ALL_TIME",
-			};
-		} catch (fallbackError) {
-			console.error("All ClipsCards fetches failed:", fallbackError);
-			return {
-				clips: [],
-				hasNextPage: false,
-				endCursor: null,
-				primaryFilter: primaryFilter,
-			};
-		}
 	}
 }
 

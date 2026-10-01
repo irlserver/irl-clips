@@ -1,4 +1,7 @@
-const KEY_PREFIX = "brb-screen:clips:";
+const BASE_PREFIX = "brb-screen:clips:";
+// Bump when cached pools stop being valid, e.g. when the fetching changes what
+// a complete pool contains. Entries under older versions get pruned.
+const KEY_PREFIX = `${BASE_PREFIX}v2:`;
 
 // A deleted or unpublished clip in an old list just fails to load and gets
 // skipped, so a week of staleness is harmless and keeps BRB reloads instant
@@ -39,7 +42,7 @@ export function loadCachedClips(key) {
 }
 
 /**
- * Cache a clip list, clearing out expired lists for other channels first
+ * Cache a clip list, clearing out expired and outdated lists first
  * @param {string} key - Key from clipCacheKey
  * @param {Array} clips - Clips to cache
  */
@@ -74,10 +77,10 @@ function isExpired(entry) {
 function pruneExpired() {
   for (let i = localStorage.length - 1; i >= 0; i--) {
     const key = localStorage.key(i);
-    if (!key?.startsWith(KEY_PREFIX)) continue;
+    if (!key?.startsWith(BASE_PREFIX)) continue;
 
     const entry = parseEntry(localStorage.getItem(key));
-    if (!entry || isExpired(entry)) {
+    if (!key.startsWith(KEY_PREFIX) || !entry || isExpired(entry)) {
       localStorage.removeItem(key);
     }
   }

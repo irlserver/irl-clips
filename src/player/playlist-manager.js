@@ -1,6 +1,6 @@
 import {
+	clipDateRange,
 	fetchClipsCards,
-	fetchMultipleCriteriaClips,
 	getClipPlaybackUrl,
 } from "../api/twitch.js";
 import { filterByDateRange, smartShuffle } from "../utils/array.js";
@@ -18,7 +18,6 @@ export class PlaylistManager {
 		this.playlist = [];
 		this.currentIndex = 0;
 		this.shuffleStrategy = "smart"; // Can be 'random', 'stratified', 'weighted', 'smart'
-		this.maxClipsToFetch = 400; // Fetch more clips for better variety
 		this.minInitialClips = 50;
 		this.isLoadingComplete = false;
 		this.backgroundLoadingPromise = null;
@@ -39,7 +38,7 @@ export class PlaylistManager {
 	/**
 	 * Load initial clips for immediate playback. A cached clip list starts
 	 * playing right away and gets refreshed in the background; otherwise
-	 * playback waits for a fresh initial pool.
+	 * playback starts on the first page of every channel.
 	 * @param {string} channelName - Twitch channel name (comma-separated for multiple)
 	 * @param {number} days - Number of days to filter clips
 	 * @param {number} minViews - Minimum view count filter
@@ -111,8 +110,7 @@ export class PlaylistManager {
 	}
 
 	/**
-	 * Fetch the first batch for every channel and page on until it holds
-	 * minInitialClips matching clips
+	 * Fetch the first page of clips for every channel
 	 * @param {string[]} channels - Channel names
 	 * @param {number} days - Number of days to filter clips
 	 * @param {number} minViews - Minimum view count filter
@@ -121,90 +119,61 @@ export class PlaylistManager {
 	 */
 	async fetchInitialPool(channels, days, minViews) {
 		console.log(
-			`🚀 Fast loading diverse clips for ${channels.length} channel(s): ${channels.join(", ")}...`,
+			`🚀 Loading clips for ${channels.length} channel(s): ${channels.join(", ")}...`,
 		);
 
-		const results = await Promise.all(
-			channels.map((ch) =>
-				fetchMultipleCriteriaClips(ch, days)
-					.then((result) => ({ channel: ch, ...result, success: true }))
-					.catch((error) => {
-						console.warn(`Failed to fetch clips for ${ch}:`, error.message);
-						return {
-							channel: ch,
-							clips: [],
-							hasNextPage: false,
-							endCursor: null,
-							primaryFilter: null,
-							success: false,
-						};
-					}),
-			),
-		);
-
+		// Every page shares one window so page offsets stay stable while paging
+		const range = clipDateRange(days);
+		const results = channels.map((channel) => ({
+			channel,
+			range,
+			cursor: null,
+			done: false,
+			failed: false,
+		}));
 		const seenIds = new Set();
-		const batch = [];
-		for (const result of results) {
-			for (const clip of result.clips) {
-				if (!seenIds.has(clip.id)) {
-					seenIds.add(clip.id);
-					batch.push(clip);
-				}
-			}
-		}
 
-		console.log(
-			`Initial diverse batch: ${batch.length} clips from ${channels.length} channel(s)`,
-		);
+		const clips = await this.fetchNextPages(results, seenIds, days, minViews);
 
-		const clips = this.applyFilters(batch, days, minViews);
-
-		if (clips.length < this.minInitialClips) {
+		// Only loops on the all time fallback listing, where the first pages can
+		// be all older clips. Starting playback on the first handful of matches
+		// would open every session with the same most viewed clips.
+		while (clips.length < this.minInitialClips && this.hasMorePages(results)) {
 			clips.push(
-				...(await this.fillInitialPool(
-					results,
-					seenIds,
-					days,
-					minViews,
-					clips.length,
-				)),
+				...(await this.fetchNextPages(results, seenIds, days, minViews)),
 			);
 		}
+
+		console.log(`Initial batch: ${clips.length} matching clips`);
 
 		return { clips, results, seenIds };
 	}
 
 	/**
 	 * Fetch the next page for every channel that still has one.
-	 * Mutates each result's cursor so later calls continue where this one stopped.
-	 * @param {Array<Object>} results - Per-channel results with {channel, success, hasNextPage, endCursor, primaryFilter}
+	 * Mutates each result's pagination state so later calls continue where
+	 * this one stopped.
+	 * @param {Array<Object>} results - Per-channel state {channel, range, cursor, done, failed}
 	 * @param {Set<string>} seenIds - Clip IDs already fetched, updated in place
 	 * @param {number} days - Number of days to filter clips
 	 * @param {number} minViews - Minimum view count filter
 	 * @returns {Promise<Array>} New clips from this page round that pass the filters
 	 */
 	async fetchNextPages(results, seenIds, days, minViews) {
-		const pageable = results.filter(
-			(r) => r.success && r.hasNextPage && r.endCursor,
-		);
+		const pending = results.filter((r) => !r.done);
 
 		const pages = await Promise.all(
-			pageable.map(async (result) => {
+			pending.map(async (result) => {
 				try {
-					const next = await fetchClipsCards(
-						result.channel,
-						100,
-						result.primaryFilter,
-						result.endCursor,
-					);
-					result.hasNextPage = next.hasNextPage;
-					result.endCursor = next.endCursor;
+					const next = await this.fetchPage(result);
+					result.cursor = next.endCursor;
+					result.done = !next.hasNextPage || !next.endCursor;
 
 					// Clips come sorted by views descending, so once a page dips below
 					// minViews no later page can contain a match.
 					const lastClip = next.clips[next.clips.length - 1];
 					if (minViews > 0 && lastClip && lastClip.viewCount < minViews) {
-						result.hasNextPage = false;
+						result.done = true;
 					}
 
 					return next.clips;
@@ -213,7 +182,8 @@ export class PlaylistManager {
 						`Failed to page clips for ${result.channel}:`,
 						error.message,
 					);
-					result.hasNextPage = false;
+					result.done = true;
+					result.failed = true;
 					return [];
 				}
 			}),
@@ -229,74 +199,69 @@ export class PlaylistManager {
 	}
 
 	/**
+	 * Fetch one page for a channel. The startAt/endAt window is undocumented,
+	 * so if Twitch ever rejects it the channel falls back to the plain all time
+	 * listing; applyFilters still enforces the date range on that.
+	 * @param {Object} result - Per-channel pagination state, range is cleared on fallback
+	 * @returns {Promise<Object>} Page from fetchClipsCards
+	 */
+	async fetchPage(result) {
+		try {
+			return await fetchClipsCards(
+				result.channel,
+				100,
+				"ALL_TIME",
+				result.cursor,
+				result.range,
+			);
+		} catch (error) {
+			if (!result.range || result.cursor) throw error;
+
+			console.warn(
+				`Date range query failed for ${result.channel}, falling back to all time listing:`,
+				error.message,
+			);
+			result.range = null;
+			return fetchClipsCards(result.channel, 100, "ALL_TIME");
+		}
+	}
+
+	/**
 	 * Whether any channel still has pages left to fetch
-	 * @param {Array<Object>} results - Per-channel results with pagination info
+	 * @param {Array<Object>} results - Per-channel pagination state
 	 * @returns {boolean}
 	 */
 	hasMorePages(results) {
-		return results.some((r) => r.success && r.hasNextPage && r.endCursor);
+		return results.some((r) => !r.done);
 	}
 
 	/**
-	 * Page further into each channel's clips until the initial pool holds
-	 * minInitialClips matching clips. Twitch only offers LAST_DAY/LAST_WEEK/
-	 * LAST_MONTH/ALL_TIME sorted by views, so for ranges like 250 days the first
-	 * matches are always the most viewed clips in range. Starting playback on
-	 * that handful would open every session with the same few clips.
-	 * @param {Array<Object>} results - Per-channel results with pagination info
-	 * @param {Set<string>} seenIds - Clip IDs already fetched
-	 * @param {number} days - Number of days to filter clips
-	 * @param {number} minViews - Minimum view count filter
-	 * @param {number} alreadyFound - Matching clips the initial batch already has
-	 * @returns {Promise<Array>} Additional filtered clips (may fall short if the channels or the page limit run out)
+	 * Whether every channel was paged to its end without errors. A pool cut
+	 * short by a failed page must not be cached, or every load for the next
+	 * week would start from that partial pool.
+	 * @param {Array<Object>} results - Per-channel pagination state
+	 * @returns {boolean}
 	 */
-	async fillInitialPool(results, seenIds, days, minViews, alreadyFound) {
-		// Caps the loading screen on channels with huge archives (~0.6s per page)
-		const maxPages = 20;
-		const found = [];
-
-		for (
-			let page = 1;
-			page <= maxPages &&
-			alreadyFound + found.length < this.minInitialClips &&
-			this.hasMorePages(results);
-			page++
-		) {
-			console.log(
-				`🔎 ${alreadyFound + found.length}/${this.minInitialClips} clips match filters, searching page ${page + 1}...`,
-			);
-
-			found.push(
-				...(await this.fetchNextPages(results, seenIds, days, minViews)),
-			);
-		}
-
-		return found;
+	isPoolComplete(results) {
+		return !results.some((r) => r.failed);
 	}
 
 	/**
-	 * Keep paging every channel until the pool holds maxClipsToFetch matching
-	 * clips or the channels run out of pages. The cap counts clips that pass the
-	 * filters, so narrow date ranges on channels with many older popular clips
-	 * still fill up.
-	 * @param {Array<Object>} results - Per-channel results with pagination info
+	 * Keep paging every channel until Twitch runs out of clips in the window
+	 * @param {Array<Object>} results - Per-channel pagination state
 	 * @param {Set<string>} seenIds - Clip IDs already fetched
 	 * @param {number} days - Number of days to filter clips
 	 * @param {number} minViews - Minimum view count filter
-	 * @param {number} alreadyFound - Matching clips the pool already has
 	 * @returns {Promise<Array>} Additional filtered clips
 	 */
-	async fetchRemainingClips(results, seenIds, days, minViews, alreadyFound) {
-		// Safety net against paging forever through channels with huge clip archives
+	async fetchRemainingClips(results, seenIds, days, minViews) {
+		// Twitch ends every listing around 1100 clips (11 pages); this only guards
+		// against a cursor that never reports the end
 		const maxPages = 50;
 		const newClips = [];
 		let page = 0;
 
-		while (
-			page < maxPages &&
-			alreadyFound + newClips.length < this.maxClipsToFetch &&
-			this.hasMorePages(results)
-		) {
+		while (page < maxPages && this.hasMorePages(results)) {
 			page++;
 			newClips.push(
 				...(await this.fetchNextPages(results, seenIds, days, minViews)),
@@ -315,7 +280,7 @@ export class PlaylistManager {
 
 	/**
 	 * Grow the playlist that started from a freshly fetched initial pool
-	 * @param {Array<Object>} results - Per-channel results with pagination info
+	 * @param {Array<Object>} results - Per-channel pagination state
 	 * @param {Set<string>} seenIds - Clip IDs already fetched
 	 * @param {number} days - Number of days to filter clips
 	 * @param {number} minViews - Minimum view count filter
@@ -331,7 +296,6 @@ export class PlaylistManager {
 				seenIds,
 				days,
 				minViews,
-				this.playlist.length,
 			);
 
 			if (newClips.length > 0) {
@@ -344,7 +308,11 @@ export class PlaylistManager {
 				console.log("✅ No additional clips found");
 			}
 
-			saveCachedClips(cacheKey, this.playlist);
+			if (this.isPoolComplete(results)) {
+				saveCachedClips(cacheKey, this.playlist);
+			} else {
+				console.warn("Some pages failed, not caching this clip pool");
+			}
 		} catch (error) {
 			console.error("Background loading failed:", error);
 		} finally {
@@ -373,13 +341,11 @@ export class PlaylistManager {
 				seenIds,
 				days,
 				minViews,
-				clips.length,
 			);
 			const fresh = [...clips, ...remaining];
 
-			// Nothing back usually means Twitch failed, so keep playing the cache
-			if (fresh.length === 0) {
-				console.warn("Refresh returned no clips, keeping cached playlist");
+			if (!this.isPoolComplete(results) || fresh.length === 0) {
+				console.warn("Refresh incomplete, keeping cached playlist");
 				return;
 			}
 
