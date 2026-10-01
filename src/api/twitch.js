@@ -1,11 +1,11 @@
 const CLIENT_ID = "kd1unb4b3q4t58fwlpcbzcbnm76a8fp";
 const GRAPHQL_ENDPOINT = "https://gql.twitch.tv/gql";
 const PERSISTED_QUERY_HASH =
-	"4f35f1ac933d76b1da008c806cd5546a7534dfaff83e033a422a81f24e5991b3";
+	"c5ca7c4143e42f257b91b97b37fbb19206460f42f564a02095bb504fd0a31af8";
 
 // New ClipsCards__User persisted query hash (more reliable)
 const CLIPS_CARDS_QUERY_HASH =
-	"1cd671bfa12cec480499c087319f26d21925e9695d1f80225aae6a4354f23088";
+	"5e28057f6a6bb95f25474447baf2eea1609ba987dc819b1a537fb0f9e08309bd";
 
 /**
  * Convert days parameter to appropriate filter value
@@ -51,6 +51,7 @@ export async function fetchClipsCards(
 			limit: Math.min(limit, 100), // Ensure we don't exceed GraphQL limit
 			criteria: {
 				filter: filter,
+				shouldFilterByDiscoverySetting: false
 			},
 		};
 
@@ -549,6 +550,8 @@ export async function getClipPlaybackUrl(clipSlug) {
 				variables: {
 					platform: "web",
 					slug: clipSlug,
+					supportedCodecs: ["AVC", "HEVC", "AV1"]
+
 				},
 				extensions: {
 					persistedQuery: {
